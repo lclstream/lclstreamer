@@ -119,9 +119,9 @@ class PeaknetPreprocessingPipelineParameters(_CustomBaseModel):
     """
     Configuration parameters for the PeakNet Preprocessing Pipeline
 
-    This pipeline pads detector images to a uniform size, accumulates them
-    into batches, and optionally adds a channel dimension, preparing the data
-    for inference with the PeakNet model
+    This pipeline adds a channel dimension, pads detector images to a uniform
+    size, optionally applies instance normalization, accumulates them into
+    batches, and optionally merges batch and channel dimensions
 
     Attributes:
 
@@ -138,11 +138,23 @@ class PeaknetPreprocessingPipelineParameters(_CustomBaseModel):
             (padding added only to the bottom and right edges)
             Defaults to ``"center"``
 
-        add_channel_dim: Whether to insert a channel dimension after batching,
-            converting (B, H, W) arrays to (B, C, H, W). Defaults to ``True``
+        add_channel_dim: Whether to insert a channel dimension before padding,
+            converting (H, W) images to (1, H, W). Defaults to ``True``
 
-        num_channels: Number of channels to produce when ``add_channel_dim``
-            is ``True``. Defaults to ``1``
+        merge_batch_and_channel: Whether to reshape (B, C, H, W) to
+            (B*C, 1, H, W) after batching. Defaults to ``False``
+
+        apply_normalization: Whether to apply instance normalization to each
+            image before batching. Defaults to ``False``
+
+        norm_eps: Small constant for numerical stability in normalization.
+            Defaults to ``1e-5``
+
+        norm_check_nan: Whether to check for NaN values after normalization.
+            Defaults to ``True``
+
+        norm_scale_variance: Whether to scale by standard deviation during
+            normalization. Defaults to ``True``
     """
 
     type: Literal["PeaknetPreprocessingPipeline"]
@@ -151,7 +163,11 @@ class PeaknetPreprocessingPipelineParameters(_CustomBaseModel):
     target_width: int
     pad_style: Literal["center", "bottom-right"] = "center"
     add_channel_dim: bool = True
-    num_channels: int = 1
+    merge_batch_and_channel: bool = False
+    apply_normalization: bool = False
+    norm_eps: float = 1e-5
+    norm_check_nan: bool = True
+    norm_scale_variance: bool = True
 
 
 ProcessingPipelineParameters = Annotated[
@@ -238,8 +254,31 @@ class HDF5BinarySerializerParameters(_CustomBaseModel):
     fields: Dict[str, str]
 
 
+class NumpyBinarySerializerParameters(_CustomBaseModel):
+    """
+    Configuration parameters for the Numpy binary serializer
+
+    This serializer encodes a batch of event data arrays into an in-memory
+    .npz file (numpy's native format). Optional gzip compression can be applied
+
+    Attributes:
+
+        type: Discriminator field, must be ``"NumpyBinarySerializer"``
+
+        use_compression: Whether to use gzip compression when saving the .npz
+            file. Defaults to ``True``
+    """
+
+    type: Literal["NumpyBinarySerializer"]
+    use_compression: bool = True
+
+
 DataSerializerParameters = Annotated[
-    Union[HDF5BinarySerializerParameters, SimplonBinarySerializerParameters],
+    Union[
+        HDF5BinarySerializerParameters,
+        NumpyBinarySerializerParameters,
+        SimplonBinarySerializerParameters,
+    ],
     Field(discriminator="type"),
 ]
 
