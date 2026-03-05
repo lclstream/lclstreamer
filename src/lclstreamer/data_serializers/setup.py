@@ -6,6 +6,7 @@ from ..utils.logging import log_error_and_exit
 from ..utils.protocols import DataSerializerProtocol
 from .dectris.simplon import SimplonBinarySerializer as SimplonBinarySerializer
 from .files.hdf5 import HDF5BinarySerializer as HDF5BinarySerializer
+from .files.numpy import NumpyBinarySerializer as NumpyBinarySerializer
 
 
 def initialize_data_serializer(

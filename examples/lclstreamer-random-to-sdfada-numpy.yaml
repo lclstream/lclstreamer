@@ -1,0 +1,39 @@
+source_identifier: random_data_stream
+skip_incomplete_events: false
+
+event_source:
+    type: InternalEventSource
+    number_of_events_to_generate: 1200
+
+data_sources:
+    timestamp:
+        type: GenericRandomTimestamp
+
+    detector_data:
+        type: GenericRandomNumpyArray
+        array_shape: "1920,1920"
+        array_dtype: float32
+
+    photon_wavelength:
+        type: GenericRandomWavelength
+
+processing_pipeline:
+    type: PeaknetPreprocessingPipeline
+    batch_size: 8
+    target_height: 1920
+    target_width: 1920
+    pad_style: center
+    add_channel_dim: true
+
+data_serializer:
+    type: NumpyBinarySerializer
+    use_compression: true
+
+data_handlers:
+    - type: BinaryDataStreamingDataHandler
+      urls:
+          - "tcp://sdfada014:12321"
+          - "tcp://sdfada014:12322"
+      role: client
+      library: zmq
+      socket_type: push

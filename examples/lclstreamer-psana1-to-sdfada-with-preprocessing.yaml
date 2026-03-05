@@ -29,7 +29,6 @@ processing_pipeline:
     target_width: 2048
     pad_style: center
     add_channel_dim: true
-    num_channels: 1
 
 data_serializer:
     type: HDF5BinarySerializer

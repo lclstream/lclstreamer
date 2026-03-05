@@ -193,6 +193,94 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             )
 
 
+class GenericRandomTimestamp(DataSourceProtocol):
+    """
+    See documentation of the `__init__` function.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        parameters: DataSourceParameters,
+        additional_info: dict[str, Any],
+    ):
+        """
+        Initializes a Generic Random Timestamp Data Source
+
+        Arguments:
+
+            name: An identifier for the data source
+
+            parameters: The configuration parameters
+
+            additional_info: Additional information (unused)
+        """
+        del name
+        del parameters
+        del additional_info
+
+    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+        """
+        Retrieves a random timestamp value (Unix epoch time in seconds)
+
+        Arguments:
+
+            event: An event object (unused)
+
+        Returns:
+
+            timestamp: A 0-dimensional numpy float64 array containing a random
+                timestamp in the range ~2020-2023
+        """
+        del event
+        random_timestamp: float = numpy.random.uniform(1600000000, 1700000000)
+        return numpy.array(random_timestamp, dtype=numpy.float64)
+
+
+class GenericRandomWavelength(DataSourceProtocol):
+    """
+    See documentation of the `__init__` function.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        parameters: DataSourceParameters,
+        additional_info: dict[str, Any],
+    ):
+        """
+        Initializes a Generic Random Wavelength Data Source
+
+        Arguments:
+
+            name: An identifier for the data source
+
+            parameters: The configuration parameters
+
+            additional_info: Additional information (unused)
+        """
+        del name
+        del parameters
+        del additional_info
+
+    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+        """
+        Retrieves a random wavelength value in the typical X-ray range
+
+        Arguments:
+
+            event: An event object (unused)
+
+        Returns:
+
+            wavelength: A 0-dimensional numpy float64 array containing a random
+                wavelength value between 0.1 and 10.0 Angstroms
+        """
+        del event
+        random_wavelength: float = numpy.random.uniform(0.1, 10.0)
+        return numpy.array(random_wavelength, dtype=numpy.float64)
+
+
 class SourceIdentifier(DataSourceProtocol):
     """
     See documentation of the `__init__` function.

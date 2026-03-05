@@ -18,6 +18,12 @@ from .data_sources import (
     GenericRandomNumpyArray as GenericRandomNumpyArray,
 )
 from .data_sources import (
+    GenericRandomTimestamp as GenericRandomTimestamp,
+)
+from .data_sources import (
+    GenericRandomWavelength as GenericRandomWavelength,
+)
+from .data_sources import (
     IntValue as IntValue,
 )
 
