@@ -33,9 +33,12 @@ class Psana1Timestamp(DataSourceProtocol):
         del parameters
         del additional_info
 
-    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+    def get_data(self, event: Any) -> NDArray[numpy.uint64]:
         """
         Retrieves timestamp information from a psana1 event
+
+        Encodes the timestamp as a uint64 matching psana2's native format:
+        upper 32 bits = seconds, lower 32 bits = nanoseconds.
 
         Arguments:
 
@@ -43,15 +46,18 @@ class Psana1Timestamp(DataSourceProtocol):
 
         Returns:
 
-            timestamp: a 1D numpy array (of type float64) containing the timestamp
-            information
+            timestamp: a numpy scalar (uint64) with seconds in upper 32 bits
+            and nanoseconds in lower 32 bits
         """
         psana_event_id: Any = event.get(
             EventId  # pyright: ignore[reportAttributeAccessIssue]
         )
         timestamp_epoch_format: Any = psana_event_id.time()
+        seconds = int(timestamp_epoch_format[0])
+        nanoseconds = int(timestamp_epoch_format[1])
         return numpy.array(
-            str(timestamp_epoch_format[0]) + "." + str(timestamp_epoch_format[1])
+            (seconds << 32) | nanoseconds,
+            dtype=numpy.uint64,
         )
 
 
