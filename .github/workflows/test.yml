@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, npz-serializer]
+  pull_request:
+    branches: [main, npz-serializer]
+
+jobs:
+  test-mock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.54.1
+          cache: true
+
+      - name: Run mock-based unit tests
+        run: pixi run pytest tests/test_psana1_data_sources.py tests/test_psana2_data_sources.py -v
+
+  test-psana2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.54.1
+          environments: psana2
+          cache: true
+
+      - name: Run psana2 integration tests
+        run: pixi run -e psana2 pytest tests/test_psana2_integration.py -v
