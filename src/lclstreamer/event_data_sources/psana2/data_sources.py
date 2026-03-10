@@ -30,9 +30,12 @@ class Psana2Timestamp(DataSourceProtocol):
         """
         pass
 
-    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+    def get_data(self, event: Any) -> NDArray[numpy.uint64]:
         """
-        Retrieves timestamp information from a psana2 event
+        Retrieves timestamp information from a psana2 event.
+
+        The psana2 event.timestamp is natively a uint64 with seconds in the
+        upper 32 bits and nanoseconds in the lower 32 bits.
 
         Arguments:
 
@@ -40,10 +43,10 @@ class Psana2Timestamp(DataSourceProtocol):
 
         Returns:
 
-            timestamp: a 1D numpy array (of type float64) containing the timestamp
-            information
+            timestamp: a numpy scalar (uint64) with seconds in upper 32 bits
+            and nanoseconds in lower 32 bits
         """
-        return numpy.array(event.timestamp, dtype=numpy.float64)
+        return numpy.array(event.timestamp, dtype=numpy.uint64)
 
 
 class Psana2DetectorInterface(DataSourceProtocol):
