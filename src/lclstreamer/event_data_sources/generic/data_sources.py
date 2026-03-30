@@ -237,3 +237,76 @@ class SourceIdentifier(DataSourceProtocol):
                 source identifier defined at initialization
         """
         return self._source_identifier
+
+
+class MpiRank(DataSourceProtocol):
+    """
+    Data source that returns the MPI rank of the current process.
+
+    Useful for tracking which producer sent each event.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        parameters: DataSourceParameters,
+        additional_info: dict[str, Any],
+    ):
+        """
+        Initializes an MPI Rank data source.
+
+        Attempts to get rank from:
+        1. MPI library (if available and initialized)
+        2. Environment variables (OMPI_COMM_WORLD_RANK, PMI_RANK, SLURM_PROCID)
+        3. Falls back to 0 if not in MPI context
+
+        Arguments:
+            name: An identifier for the data source
+            parameters: The configuration parameters
+            additional_info: Additional runtime info
+        """
+        del name
+        del parameters
+        del additional_info
+
+        self._rank: int = self._get_mpi_rank()
+
+    def _get_mpi_rank(self) -> int:
+        """Get MPI rank from various sources."""
+        import os
+
+        # Try MPI library first
+        try:
+            from mpi4py import MPI
+            if MPI.COMM_WORLD.Get_size() > 1:
+                return MPI.COMM_WORLD.Get_rank()
+        except ImportError:
+            pass
+        except Exception:
+            pass
+
+        # Try environment variables set by MPI launchers
+        for env_var in ['OMPI_COMM_WORLD_RANK', 'PMI_RANK', 'SLURM_PROCID',
+                        'MV2_COMM_WORLD_RANK', 'MPICH_RANK']:
+            rank_str = os.environ.get(env_var)
+            if rank_str is not None:
+                try:
+                    return int(rank_str)
+                except ValueError:
+                    pass
+
+        # Not in MPI context
+        return 0
+
+    def get_data(self, event: Any) -> NDArray[numpy.int32]:
+        """
+        Returns the MPI rank as a numpy array.
+
+        Arguments:
+            event: Event object (unused)
+
+        Returns:
+            1D numpy array containing the MPI rank
+        """
+        del event
+        return numpy.array(self._rank, dtype=numpy.int32)

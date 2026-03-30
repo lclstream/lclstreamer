@@ -5,6 +5,7 @@ from ..models.parameters import (
 from ..utils.logging import log_error_and_exit
 from ..utils.protocols import DataSerializerProtocol
 from .dectris.simplon import SimplonBinarySerializer as SimplonBinarySerializer
+from .files.fast_binary import FastBinarySerializer as FastBinarySerializer
 from .files.hdf5 import HDF5BinarySerializer as HDF5BinarySerializer
 
 

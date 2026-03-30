@@ -7,21 +7,26 @@ dependencies = [
     "numpy",
     "pydantic",
     "stream @ git+https://github.com/frobnitzem/stream.py",
-    "aiostream",
     "pyyaml",
     "pyzmq",
-    "pynng",
+    "cbor",
+    "bitshuffle",
+    "rich"
+]
+
+[project.optional-dependencies]
+docs = [
     "sphinx",
     "myst-parser",
     "pydata-sphinx-theme",
     "sphinx-click",
     "sphinxcontrib-images",
-    "sphinxcontrib-mermaid",
+    "sphinxcontrib-mermaid"
+]
+dev = [
     "mypy",
-    "h5py-stubs",
-    "cbor",
-    "bitshuffle",
     "pytest",
+    "h5py-stubs",
     "types-PyYAML"
 ]
 
@@ -88,44 +93,22 @@ psana1 = [
     "numpy",
     "pydantic",
     "stream @ git+https://github.com/frobnitzem/stream.py",
-    "aiostream",
     "pyyaml",
     "pyzmq",
-    "pynng",
-    "sphinx",
-    "myst-parser",
-    "pydata-sphinx-theme",
-    "sphinx-click",
-    "sphinxcontrib-images",
-    "sphinxcontrib-mermaid",
-    "mypy",
-    "h5py-stubs",
     "cbor",
     "bitshuffle",
-    "pytest",
-    "types-PyYAML"
+    "rich"
 ]
 psana2 = [
     "typer",
     "numpy",
     "pydantic",
     "stream @ git+https://github.com/frobnitzem/stream.py",
-    "aiostream",
     "pyyaml",
     "pyzmq",
-    "pynng",
-    "sphinx",
-    "myst-parser",
-    "pydata-sphinx-theme",
-    "sphinx-click",
-    "sphinxcontrib-images",
-    "sphinxcontrib-mermaid",
-    "mypy",
-    "h5py-stubs",
     "cbor",
     "bitshuffle",
-    "pytest",
-    "types-PyYAML"
+    "rich"
 ]
 
 [tool.pixi.tasks]
