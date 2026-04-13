@@ -55,7 +55,7 @@ channels = ["lcls-i"]
 channels = ["lcls-ii"]
 
 [tool.pixi.pypi-dependencies]
-lclstreamer = { path = ".", editable = true }
+lclstreamer = { path = ".", editable = false }
 
 [tool.pixi.environments]
 psana1 = ["psana1"]
