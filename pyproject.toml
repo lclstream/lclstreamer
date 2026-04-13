@@ -20,7 +20,6 @@ dependencies = [
     "mypy",
     "h5py-stubs",
     "cbor",
-    "bitshuffle",
     "pytest",
     "types-PyYAML"
 ]
@@ -73,6 +72,7 @@ openmpi = "*"
 mpi4py = "*"
 h5py = "*"
 hdf5plugin = ">=5.1.0"
+bitshuffle = "*"
 
 [tool.pixi.feature.psana1.dependencies]
 python = "3.11.*"
@@ -82,51 +82,49 @@ psana = "==4.0.66"
 python = "3.13.*"
 psana = { version="==4.2.4", channel="lcls-ii" }
 
-[dependency-groups]
-psana1 = [
-    "typer",
-    "numpy",
-    "pydantic",
-    "stream @ git+https://github.com/frobnitzem/stream.py",
-    "aiostream",
-    "pyyaml",
-    "pyzmq",
-    "pynng",
-    "sphinx",
-    "myst-parser",
-    "pydata-sphinx-theme",
-    "sphinx-click",
-    "sphinxcontrib-images",
-    "sphinxcontrib-mermaid",
-    "mypy",
-    "h5py-stubs",
-    "cbor",
-    "bitshuffle",
-    "pytest",
-    "types-PyYAML"
-]
-psana2 = [
-    "typer",
-    "numpy",
-    "pydantic",
-    "stream @ git+https://github.com/frobnitzem/stream.py",
-    "aiostream",
-    "pyyaml",
-    "pyzmq",
-    "pynng",
-    "sphinx",
-    "myst-parser",
-    "pydata-sphinx-theme",
-    "sphinx-click",
-    "sphinxcontrib-images",
-    "sphinxcontrib-mermaid",
-    "mypy",
-    "h5py-stubs",
-    "cbor",
-    "bitshuffle",
-    "pytest",
-    "types-PyYAML"
-]
+#[dependency-groups]
+#psana1 = [
+#    "typer",
+#    "numpy",
+#    "pydantic",
+#    "stream @ git+https://github.com/frobnitzem/stream.py",
+#    "aiostream",
+#    "pyyaml",
+#    "pyzmq",
+#    "pynng",
+#    "sphinx",
+#    "myst-parser",
+#    "pydata-sphinx-theme",
+#    "sphinx-click",
+#    "sphinxcontrib-images",
+#    "sphinxcontrib-mermaid",
+#    "mypy",
+#    "h5py-stubs",
+#    "cbor",
+#    "pytest",
+#    "types-PyYAML"
+#]
+#psana2 = [
+#    "typer",
+#    "numpy",
+#    "pydantic",
+#    "stream @ git+https://github.com/frobnitzem/stream.py",
+#    "aiostream",
+#    "pyyaml",
+#    "pyzmq",
+#    "pynng",
+#    "sphinx",
+#    "myst-parser",
+#    "pydata-sphinx-theme",
+#    "sphinx-click",
+#    "sphinxcontrib-images",
+#    "sphinxcontrib-mermaid",
+#    "mypy",
+#    "h5py-stubs",
+#    "cbor",
+#    "pytest",
+#    "types-PyYAML"
+#]
 
 [tool.pixi.tasks]
 
