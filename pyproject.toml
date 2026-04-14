@@ -21,7 +21,8 @@ dependencies = [
     "h5py-stubs",
     "cbor",
     "pytest",
-    "types-PyYAML"
+    "types-PyYAML",
+    "mpi4py",
 ]
 
 [build-system]
@@ -53,12 +54,16 @@ channels = ["lcls-i"]
 [tool.pixi.feature.psana2]
 channels = ["lcls-ii"]
 
+[tool.pixi.feature.psana2nersc]
+channels = ["lcls-ii"]
+
 [tool.pixi.pypi-dependencies]
 lclstreamer = { path = ".", editable = false }
 
 [tool.pixi.environments]
 psana1 = ["psana1"]
 psana2 = ["psana2"]
+psana2nersc = ["psana2nersc"]
 
 [tool.pixi.feature.psana1.activation]
 scripts = ["activation-psana1.sh"]
@@ -66,10 +71,11 @@ scripts = ["activation-psana1.sh"]
 [tool.pixi.feature.psana2.activation]
 scripts = ["activation-psana2.sh"]
 
+[tool.pixi.feature.psana2nersc.activation]
+scripts = ["activation-psana2.sh"]
+
 [tool.pixi.dependencies]
 python = ">=3.11,<3.14"
-openmpi = "*"
-mpi4py = "*"
 h5py = "*"
 hdf5plugin = ">=5.1.0"
 bitshuffle = "*"
@@ -77,54 +83,19 @@ bitshuffle = "*"
 [tool.pixi.feature.psana1.dependencies]
 python = "3.11.*"
 psana = "==4.0.66"
+openmpi = "*"
+prometheus-cpp = "*"
 
 [tool.pixi.feature.psana2.dependencies]
 python = "3.13.*"
-psana = { version="==4.2.4", channel="lcls-ii" }
+psana = { version="==4.3.1", channel="lcls-ii" }
+openmpi = "*"
+prometheus-cpp = { version=">=1.3.0,<1.4.0", channel="conda-forge" }
 
-#[dependency-groups]
-#psana1 = [
-#    "typer",
-#    "numpy",
-#    "pydantic",
-#    "stream @ git+https://github.com/frobnitzem/stream.py",
-#    "aiostream",
-#    "pyyaml",
-#    "pyzmq",
-#    "pynng",
-#    "sphinx",
-#    "myst-parser",
-#    "pydata-sphinx-theme",
-#    "sphinx-click",
-#    "sphinxcontrib-images",
-#    "sphinxcontrib-mermaid",
-#    "mypy",
-#    "h5py-stubs",
-#    "cbor",
-#    "pytest",
-#    "types-PyYAML"
-#]
-#psana2 = [
-#    "typer",
-#    "numpy",
-#    "pydantic",
-#    "stream @ git+https://github.com/frobnitzem/stream.py",
-#    "aiostream",
-#    "pyyaml",
-#    "pyzmq",
-#    "pynng",
-#    "sphinx",
-#    "myst-parser",
-#    "pydata-sphinx-theme",
-#    "sphinx-click",
-#    "sphinxcontrib-images",
-#    "sphinxcontrib-mermaid",
-#    "mypy",
-#    "h5py-stubs",
-#    "cbor",
-#    "pytest",
-#    "types-PyYAML"
-#]
+[tool.pixi.feature.psana2nersc.dependencies]
+python = "3.13.*"
+psana = { version="==4.3.1", channel="lcls-ii" }
+prometheus-cpp = { version=">=1.3.0,<1.4.0", channel="conda-forge" }
 
 [tool.pixi.tasks]
 
