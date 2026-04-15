@@ -4,14 +4,14 @@ RUN apt-get update && apt-get install -y \
         git \ 
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
-RUN git clone -b demo/amsc-peaknet-2026 https://github.com/slac-lcls/lclstreamer
-RUN cd lclstreamer && pixi install --locked -e psana2nersc
+RUN git clone -b demo/amsc-peaknet-2026 https://github.com/slac-lcls/lclstreamer \
+    && cd lclstreamer && pixi install --locked -e psana2nersc
 # We need this here, so it is captured in the following line, which hardcodes PATH in /app/entrypoint.sh
 ENV PATH=/opt/openmpi/bin:$PATH
-RUN cd lclstreamer && pixi shell-hook -e psana2nersc -s bash > /shell-hook
-RUN echo "#!/bin/bash" > /app/entrypoint.sh
-RUN cat /shell-hook >> /app/entrypoint.sh
-RUN echo 'exec "$@"' >> /app/entrypoint.sh
+RUN cd lclstreamer && pixi shell-hook -e psana2nersc -s bash > /shell-hook \
+    && echo "#!/bin/bash" > /app/entrypoint.sh \
+    && cat /shell-hook >> /app/entrypoint.sh \
+    && echo 'exec "$@"' >> /app/entrypoint.sh
 
 FROM ubuntu:24.04 AS production
 ENV DEBIAN_FRONTEND noninteractive
@@ -37,11 +37,10 @@ RUN wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-$openmpi_ve
     && make install \
     && cd .. \
     && rm -rf openmpi-$openmpi_version.tar.gz openmpi-$openmpi_version
-RUN echo "/opt/openmpi/lib" > /etc/ld.so.conf.d/openmpi.conf
-RUN /sbin/ldconfig
+RUN echo "/opt/openmpi/lib" > /etc/ld.so.conf.d/openmpi.conf \
+    && /sbin/ldconfig
 COPY --from=build /app/lclstreamer/.pixi/envs/psana2nersc /app/lclstreamer/.pixi/envs/psana2nersc
 COPY --from=build --chmod=0755 /app/entrypoint.sh /app/entrypoint.sh
-COPY ../../../activation-psana1.sh /app/lclstreamer
-COPY ../../../activation-psana2.sh /app/lclstreamer
+COPY activation-psana1.sh activation-psana2.sh /app/lclstreamer/
 WORKDIR /app/lclstreamer
 ENTRYPOINT [ "/app/entrypoint.sh" ]
