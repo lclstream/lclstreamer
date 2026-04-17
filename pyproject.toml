@@ -51,6 +51,9 @@ platforms = ["linux-64"]
 [tool.pixi.feature.psana1]
 channels = ["lcls-i"]
 
+[tool.pixi.feature.psana1nersc]
+channels = ["lcls-i"]
+
 [tool.pixi.feature.psana2]
 channels = ["lcls-ii"]
 
@@ -64,8 +67,12 @@ lclstreamer = { path = ".", editable = false }
 psana1 = ["psana1"]
 psana2 = ["psana2"]
 psana2nersc = ["psana2nersc"]
+psana1nersc = ["psana1nersc"]
 
 [tool.pixi.feature.psana1.activation]
+scripts = ["activation-psana1.sh"]
+
+[tool.pixi.feature.psana1nersc.activation]
 scripts = ["activation-psana1.sh"]
 
 [tool.pixi.feature.psana2.activation]
@@ -84,7 +91,10 @@ bitshuffle = "*"
 python = "3.11.*"
 psana = "==4.0.66"
 openmpi = "*"
-prometheus-cpp = "*"
+
+[tool.pixi.feature.psana1nersc.dependencies]
+python = "3.11.*"
+psana = "==4.0.66"
 
 [tool.pixi.feature.psana2.dependencies]
 python = "3.13.*"

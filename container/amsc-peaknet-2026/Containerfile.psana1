@@ -5,10 +5,10 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN git clone -b demo/amsc-peaknet-2026 https://github.com/slac-lcls/lclstreamer \
-    && cd lclstreamer && pixi install --locked -e psana2nersc
+    && cd lclstreamer && pixi install --locked -e psana1nersc
 # We need this here, so it is captured in the following line, which hardcodes PATH in /app/entrypoint.sh
 ENV PATH=/opt/openmpi/bin:$PATH
-RUN cd lclstreamer && pixi shell-hook -e psana2nersc -s bash > /shell-hook \
+RUN cd lclstreamer && pixi shell-hook -e psana1nersc -s bash > /shell-hook \
     && echo "#!/bin/bash" > /app/entrypoint.sh \
     && cat /shell-hook >> /app/entrypoint.sh \
     && echo 'exec "$@"' >> /app/entrypoint.sh
@@ -132,7 +132,7 @@ RUN wget -q https://www.mpich.org/static/downloads/${MPI_VER}/mpich-${MPI_VER}.t
     && cd .. \
     && rm -rf mpich-${MPI_VER}.tar.gz mpich-${MPI_VER}
 
-COPY --from=build /app/lclstreamer/.pixi/envs/psana2nersc /app/lclstreamer/.pixi/envs/psana2nersc
+COPY --from=build /app/lclstreamer/.pixi/envs/psana1nersc /app/lclstreamer/.pixi/envs/psana1nersc
 COPY --from=build --chmod=0755 /app/entrypoint.sh /app/entrypoint.sh
 COPY activation-psana1.sh activation-psana2.sh /app/lclstreamer/
 WORKDIR /app/lclstreamer
