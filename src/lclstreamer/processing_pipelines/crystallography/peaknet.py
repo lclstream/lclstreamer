@@ -253,6 +253,39 @@ class PeaknetPreprocessingPipeline(ProcessingPipelineProtocol):
                 scale_variance=parameters.norm_scale_variance,
             )
 
+    def _preprocess_image(
+        self,
+        key: str,
+        value: StrFloatIntNDArray,
+        original_shapes: dict[str, tuple[int, int, int]],
+    ) -> StrFloatIntNDArray:
+        """
+        Applies channel-add / pad / normalize to a single image array
+
+        Captures the original ``(C, H, W)`` shape under ``key`` in
+        ``original_shapes`` (first image per key only) so ``_finalize_batch``
+        can emit matching ``<key>_original_shape`` metadata.
+        """
+        if key not in original_shapes:
+            if len(value.shape) == 2:
+                original_shapes[key] = (1, value.shape[0], value.shape[1])
+            elif len(value.shape) == 3:
+                original_shapes[key] = (
+                    value.shape[0],
+                    value.shape[1],
+                    value.shape[2],
+                )
+
+        if self._add_channel_dim and len(value.shape) == 2:
+            value = _add_channel_dimension(value)
+
+        value = self._padder(value)
+
+        if self._apply_normalization:
+            value = self._normalizer(value)
+
+        return value
+
     def _apply_batch_channel_merge(
         self, batched_data: dict[str, StrFloatIntNDArray | None]
     ) -> None:
@@ -340,34 +373,27 @@ class PeaknetPreprocessingPipeline(ProcessingPipelineProtocol):
             data_key: str
             data_value: StrFloatIntNDArray | None
             for data_key, data_value in data.items():
-                if data_value is not None and _is_image_data(data_key, data_value):
-                    # Capture original shape before any preprocessing (first image only)
-                    if data_key not in original_shapes:
-                        if len(data_value.shape) == 2:
-                            original_shapes[data_key] = (
-                                1,
-                                data_value.shape[0],
-                                data_value.shape[1],
+                if isinstance(data_value, dict):
+                    # Detector data sources return {sub_key: ndarray} after PR #29.
+                    # Descend one level so each ndarray is preprocessed and
+                    # DataStorage's existing dict-flattening keeps storage keys
+                    # aligned with original_shapes (which must match the keys
+                    # _finalize_batch sees in retrieve_stored_data()).
+                    preprocessed_sub: dict[str, StrFloatIntNDArray | None] = {}
+                    sub_key: str
+                    sub_value: StrFloatIntNDArray | None
+                    for sub_key, sub_value in data_value.items():
+                        if sub_value is not None and _is_image_data(sub_key, sub_value):
+                            preprocessed_sub[sub_key] = self._preprocess_image(
+                                sub_key, sub_value, original_shapes
                             )
-                        elif len(data_value.shape) == 3:
-                            original_shapes[data_key] = (
-                                data_value.shape[0],
-                                data_value.shape[1],
-                                data_value.shape[2],
-                            )
-
-                    # Add channel dimension if needed: (H, W) -> (1, H, W)
-                    if self._add_channel_dim and len(data_value.shape) == 2:
-                        data_value = _add_channel_dimension(data_value)
-
-                    # Apply padding: (C, H, W) -> (C, target_height, target_width)
-                    data_value = self._padder(data_value)
-
-                    # Apply normalization before batching (if enabled)
-                    if self._apply_normalization:
-                        data_value = self._normalizer(data_value)
-
-                    preprocessed_data[data_key] = data_value
+                        else:
+                            preprocessed_sub[sub_key] = sub_value
+                    preprocessed_data[data_key] = preprocessed_sub
+                elif data_value is not None and _is_image_data(data_key, data_value):
+                    preprocessed_data[data_key] = self._preprocess_image(
+                        data_key, data_value, original_shapes
+                    )
                 else:
                     preprocessed_data[data_key] = data_value
 
