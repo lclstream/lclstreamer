@@ -366,30 +366,24 @@ class PeaknetPreprocessingPipeline(ProcessingPipelineProtocol):
         data_storage: DataStorage = DataStorage()
         original_shapes: dict[str, tuple[int, int, int]] = {}
 
-        data: dict[str, StrFloatIntNDArray | None]
+        data: dict[str, StrFloatIntNDArray | dict[str, StrFloatIntNDArray] | None]
         for data in stream:
             preprocessed_data: dict[str, StrFloatIntNDArray | None] = {}
 
-            data_key: str
-            data_value: StrFloatIntNDArray | None
             for data_key, data_value in data.items():
                 if isinstance(data_value, dict):
                     # Detector data sources return {sub_key: ndarray} after PR #29.
-                    # Descend one level so each ndarray is preprocessed and
-                    # DataStorage's existing dict-flattening keeps storage keys
-                    # aligned with original_shapes (which must match the keys
-                    # _finalize_batch sees in retrieve_stored_data()).
-                    preprocessed_sub: dict[str, StrFloatIntNDArray | None] = {}
-                    sub_key: str
-                    sub_value: StrFloatIntNDArray | None
+                    # Flatten while preprocessing so each inner array lands at
+                    # the top level of preprocessed_data — matching how
+                    # original_shapes records keys and how _finalize_batch reads
+                    # them back from data_storage.retrieve_stored_data().
                     for sub_key, sub_value in data_value.items():
-                        if sub_value is not None and _is_image_data(sub_key, sub_value):
-                            preprocessed_sub[sub_key] = self._preprocess_image(
+                        if _is_image_data(sub_key, sub_value):
+                            preprocessed_data[sub_key] = self._preprocess_image(
                                 sub_key, sub_value, original_shapes
                             )
                         else:
-                            preprocessed_sub[sub_key] = sub_value
-                    preprocessed_data[data_key] = preprocessed_sub
+                            preprocessed_data[sub_key] = sub_value
                 elif data_value is not None and _is_image_data(data_key, data_value):
                     preprocessed_data[data_key] = self._preprocess_image(
                         data_key, data_value, original_shapes
