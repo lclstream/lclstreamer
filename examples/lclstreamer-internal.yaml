@@ -6,29 +6,37 @@ event_source:
     number_of_events_to_generate: 76
 
 data_sources:
-    random:
+    random_example1:
         type: GenericRandomNumpyArray
         array_shape: 20,2
         array_dtype: float32
-    int:
-        type: IntValue
-        value: 3
-    float:
-        type: FloatValue
-        value: 4.5
+        always_random: True
+    random_example2:
+        type: GenericRandomNumpyArray
+        array_shape: 3,
+        array_dtype: uint16
+        always_random: False
+    const_data_example1:
+        type: ConstValue
+        value: 6.4
+        dtype: float64
+    const_data_example2:
+        type: ConstValue
+        value: [6, 3, 1]
+        dtype: uint32
 
 processing_pipeline:
     type: BatchProcessingPipeline
-    batch_size: 10
+    batch_size: 2
 
 data_serializer:
     type: HDF5BinarySerializer
     compression_level: 3
     compression: null
-    fields:
-        random: /data/random
-        int: /data/int
-        float: /data/float
+    #fields:
+    #    random: /data/random
+    #    int: /data/int
+    #    float: /data/float
 
 data_handlers:
     #    - type: BinaryFileWritingDataHandler

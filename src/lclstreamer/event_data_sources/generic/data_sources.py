@@ -8,7 +8,7 @@ from ...utils.logging import log_error_and_exit
 from ...utils.protocols import DataSourceProtocol
 
 
-class FloatValue(DataSourceProtocol):
+class ConstValue(DataSourceProtocol):
     """
     See documentation of the `__init__` function.
     """
@@ -20,7 +20,7 @@ class FloatValue(DataSourceProtocol):
         additional_info: dict[str, Any],
     ):
         """
-        Initializes a Float Value Data Source
+        Initializes a Const Value Data Source
 
         Arguments:
 
@@ -34,85 +34,44 @@ class FloatValue(DataSourceProtocol):
             log_error_and_exit(
                 f"Entries needed by the {name} data source are not defined"
             )
-        if "value" not in extra_parameters:
+        if "dtype" not in extra_parameters:
             log_error_and_exit(
-                f"Entry 'array_shape' is not defined for data source {name}"
-            )
-        try:
-            self._value: float = float(extra_parameters["value"])
-        except ValueError:
-            log_error_and_exit(
-                f"Entry 'value' is not a valid float for data source {name}"
-            )
-
-    def get_data(self, event: Any) -> NDArray[numpy.float64]:
-        """
-        Retrieves the float value defined in the configuration file as an 1d array
-
-        Arguments:
-
-            event: A psana1 event
-
-        Returns:
-
-            random: an 1d array storing the value defined by the data source
-            configuration parameters.
-        """
-        return numpy.array(self._value, dtype=numpy.float64)
-
-
-class IntValue(DataSourceProtocol):
-    """
-    See documentation of the `__init__` function.
-    """
-
-    def __init__(
-        self,
-        name: str,
-        parameters: DataSourceParameters,
-        additional_info: dict[str, Any],
-    ):
-        """
-        Initializes a Int Value Data Source
-
-        Arguments:
-
-            name: An identifier for the data source
-
-            parameters: The configuration parameters
-        """
-        del additional_info
-        extra_parameters: dict[str, Any] | None = parameters.__pydantic_extra__
-        if extra_parameters is None:
-            log_error_and_exit(
-                f"Entries needed by the {name} data source are not defined"
+                f"Entry 'dtype' is not defined for data source {name}"
             )
         if "value" not in extra_parameters:
             log_error_and_exit(
-                f"Entry 'array_shape' is not defined for data source {name}"
+                f"Entry 'value' is not defined for data source {name}"
             )
+        self._dtype = extra_parameters["dtype"]
         try:
-            self._value: int = int(extra_parameters["value"])
-        except ValueError:
+            numpy.dtype(self._dtype)
+        except (TypeError, ValueError):
             log_error_and_exit(
-                f"Entry 'value' is not a valid int for data source {name}"
+                f"Entry 'dtype' is not defined for data source {name}"
             )
+        raw_value: numpy.number = extra_parameters["value"]
+        cast_value: numpy.NDArray[numpy.number] = numpy.array(raw_value, dtype=self._dtype)
+        if not numpy.array_equal(cast_value, numpy.array(raw_value)):
+                 log_error_and_exit(
+                    f"Value '{raw_value}' is not dtype '{self._dtype}' "
+                    f"for data source {name}."
+                )
+        self._data_dict: dict[str, NDArray[numpy.number]] = {name: cast_value}
 
-    def get_data(self, event: Any) -> NDArray[numpy.int_]:
+    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
         """
-        Retrieves the int value defined in the configuration file as an 1d array
+        Retrieves the constant float or int value defined in the configuration file as an 1d array
 
         Arguments:
 
-            event: A psana1 event
+            event: An internal, psana1 or psana2 event
 
         Returns:
 
-            random: an 1d array storing the value defined by the data source
+            An 1d array storing the value defined by the data source
             configuration parameters.
         """
-        return numpy.array(self._value, dtype=numpy.int_)
-
+        return self._data_dict
 
 class GenericRandomNumpyArray(DataSourceProtocol):
     """
@@ -148,41 +107,55 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             log_error_and_exit(
                 f"Entry 'array_dtype' is not defined for data source {name}"
             )
+        if "always_random" not in extra_parameters:
+            log_error_and_exit(
+                f"Entry 'always_random' is not defined for data source {name}"
+            )
 
         try:
             self._array_shape: tuple[int, ...] = tuple(
-                int(x) for x in extra_parameters["array_shape"].split(",")
+                int(x) for x in extra_parameters["array_shape"].split(",") if x.strip()
             )
         except ValueError:
             log_error_and_exit(
-                f"Parameter 'array_dtype' for data source {name} is malformed"
+                f"Parameter 'array_shape' for data source {name} is malformed"
+            )
+        except AttributeError:
+            log_error_and_exit(
+                f"Parameter 'array_shape' for {name} is not a tuple, \
+                  If the shape is column vector or one single value use: (X,) to define it."
             )
         try:
-            self._array_dtype: numpy.dtype[numpy.int_ | numpy.float64] = numpy.dtype(
+            self._array_dtype: numpy.dtype[numpy.number] = numpy.dtype(
                 extra_parameters["array_dtype"]
             )
         except TypeError:
             log_error_and_exit(
                 f"Dtype {extra_parameters['array_dtype']} is not available in numpy"
             )
+        self._always_random = extra_parameters["always_random"] # Check in models whether it is bool not here
+        self._name = name
 
-    def get_data(self, event: Any) -> NDArray[numpy.float64 | numpy.int_]:
+        if not self._always_random:
+            # Pre-generate the array and re-use it to save computing time
+            self._array = self._gen_data(self._array_dtype, self._array_shape)
+
+    def _gen_data(self, dtype, shape) -> NDArray[numpy.number]:
         """
-        Retrieves an array of int of float random numbers
+        Generates an array of int of float random numbers
 
         Arguments:
 
-            event: A psana1 event
+            dtype: Type of numbers
 
-        Returns:
+            shape: Shape of array
 
-            random: an array of the type and size requested by the user, containing
+        Returns: an array of the type and size requested by the user, containing
             random data (either of integer or floating type)
         """
-        del event
         if numpy.issubdtype(self._array_dtype, numpy.integer):
-            return numpy.random.randint(low=0, high=255, size=self._array_shape).astype(
-                self._array_dtype
+            return numpy.random.randint(
+                low=0, high=255, size=self._array_shape).astype(self._array_dtype
             )
         elif numpy.issubdtype(self._array_dtype, numpy.floating):
             return numpy.random.random(self._array_shape).astype(self._array_dtype)
@@ -191,6 +164,27 @@ class GenericRandomNumpyArray(DataSourceProtocol):
                 "Only random arrays of integer of floating types are currently "
                 "supported"
             )
+
+
+    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
+        """
+        Retrieves an array of int of float random numbers
+
+        Arguments:
+
+            event: A psana1 or psana2 event (doesn't matter)
+
+        Returns:
+
+            A dictionary of random numbers as requested by the user.
+        """
+        del event
+        data_dict: dict[str, Any] = {}
+        if self._always_random:
+            data_dict[self._name] = self._gen_data(self._array_dtype, self._array_shape)
+        else:
+            data_dict[self._name] = self._array
+        return data_dict
 
 
 class SourceIdentifier(DataSourceProtocol):
@@ -331,7 +325,7 @@ class BaseDetectorInterface(DataSourceProtocol):
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")
 
-    def get_data(self, event: Any) -> NDArray[Any]:
+    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
         """
         Retrieves Detector values from a psana event
 
