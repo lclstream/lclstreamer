@@ -46,5 +46,7 @@ data_handlers:
       urls:
           - "tcp://sdfada001:12321"
       role: client
+      distribute: False
+      buffer: 0
       library: zmq
       socket_type: push

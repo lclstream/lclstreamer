@@ -260,6 +260,10 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
         urls: List of endpoint URLs to bind to (server mode) or connect to
             (client mode)
 
+        distribute: Boolean, if True: round robin connect the ranks, False: all ranks connect to all urls and send the same data
+
+        buffer: buffer size, if set to 0 the OS default is used
+
         role: Whether this node acts as the ZMQ ``"server"`` (binds) or
             ``"client"`` (connects). Defaults to ``"server"``
 
@@ -272,6 +276,8 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
 
     type: Literal["BinaryDataStreamingDataHandler"]
     urls: List[str]
+    distribute: bool
+    buffer: int
     role: Literal["server", "client"] = "server"
     library: Literal["zmq"] = "zmq"
     socket_type: Literal["push"] = "push"
