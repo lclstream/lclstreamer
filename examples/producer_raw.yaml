@@ -1,0 +1,77 @@
+# LCLStreamer Producer Configuration - Raw Data for OpenCL Pipeline
+#
+# Streams raw uint16 Jungfrau data for GPU-side calibration.
+# This reduces network bandwidth (33MB vs 67MB) and enables GPU calibration.
+#
+# IMPORTANT: Before starting this producer, save calibration constants using:
+#   python scripts/save_calibration.py --experiment EXPERIMENT --run RUN
+#
+# Performance:
+# - Data size: 33 MB (uint16) vs 67 MB (float32 assembled)
+# - Deserialize: ~15-20ms vs ~40ms
+# - GPU compute: ~10ms (calib+assembly+azint) vs ~3ms (azint only)
+
+# Source identifier
+source_identifier: exp=mfx101344525,run=123
+skip_incomplete_events: true
+
+# Event source configuration
+event_source:
+    type: Psana2EventSource
+    #type: InternalEventSource
+    #number_of_events_to_generate: 15000
+
+# Data sources - raw uint16 data only
+data_sources:
+    #timestamp:
+    #    type: Psana2Timestamp
+
+    jungfrau_raw:
+        type: Psana2DetectorInterface
+        psana_name: jungfrau
+        psana_fields: raw.raw      # Raw uint16 data (not calibrated)
+        dtype: uint16
+
+    #jungfrau_raw:
+    #    type: GenericRandomNumpyArray
+    #    array_dtype: int16
+    #    array_shape: 32,512,1024
+
+# Processing pipeline
+processing_pipeline:
+    type: BatchProcessingPipeline
+    batch_size: 1
+
+# Fast binary serializer - no compression for maximum speed
+data_serializer:
+    type: HDF5BinarySerializer
+    compression_level: 0
+    compression: gzip
+    #fields:
+    #    #timestamp: data/timestamp
+    #    jungfrau.raw.raw: data/jungfrau_raw
+    #    #jungfrau_raw: data/jungfrau_raw
+
+# Data handler - stream to GPU consumer
+data_handlers:
+  - type: BinaryDataStreamingDataHandler
+    urls:
+    #        - "tcp://sdfiana024:8088"
+    #        - "tcp://sdfampere010:8086"
+    #        - "tcp://sdfampere010:8087"
+    #        - "tcp://sdfampere011:8086"
+    #        - "tcp://sdfampere011:8087"
+    #        - "ipc:///tmp/sdfmilan"
+    #        - "tcp://sdfmilan243:8086"
+    #        - "tcp://sdfmilan244:8086"
+            - "tcp://sdfiana025:8087"
+            - "tcp://sdfiana023:8086"
+            - "tcp://sdfiana023:8087"
+            - "tcp://sdfiana025:8086"
+    #        - "tcp://134.79.23.43:5000"
+    #        - "tcp://sdfiana025:8087"
+    distribute: True  # True: round robin connect the ranks, False: all ranks connect to all urls (same data sent)
+    buffer: 67108864 # 64 * 1024 * 1024 (64MB), - Capped by OS max, leave it as 0 to use OS default
+    role: client
+    library: zmq
+    socket_type: push
