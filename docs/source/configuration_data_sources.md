@@ -145,39 +145,30 @@ the user. It is primarily intended for testing and development.
 
 * `array_shape` (str): The shape of the generated array, expressed as a
   comma-separated list of integers following the same convention as numpy's `shape`
-  attribute. Example: `512, 512`
+  attribute. Example: `512, 512`, or `10,` for a column vector, `1,` for a single value.
 
 * `array_dtype` (str): The numerical type of the generated array, in the same format
   as numpy dtype strings. Only integer and floating-point types are supported.
   Example: `float32`
+  
+* `always_random` (bool): If set to `True`, it will re-generate the array at every event.
+  Otherwise it will generate one array and re-use it for every event (e.g. saves CPU time
+  for network throughput testing).
 
 
+### ConstValue
 
-### FloatValue
-
-This Data Source class returns a fixed floating-point scalar value defined in the
+This Data Source class returns a fixed floating-point or integer scalar value defined in the
 configuration file.
-
-* The value is returned as a 0-dimensional numpy array of type `float64`.
 
 #### *Configuration Parameters for FloatValue*
 
 * `value` (float): The scalar floating-point value to be returned by this data source
-  on every event. Example: `3.14`
+  on every event. Example: `3.14` or `[6, 3, 1]`.
 
-
-
-### IntValue
-
-This Data Source class returns a fixed integer scalar value defined in the configuration
-file.
-
-* The value is returned as a 0-dimensional numpy array of type `int`.
-
-#### *Configuration Parameters for IntValue*
-
-* `value` (int): The scalar integer value to be returned by this data source on every
-  event. Example: `42`
+* `dtype` (str): The numerical type of the generated constant. In the same format
+  as numpy dtype strings. Only integer and floating-point types are supported.
+  Example: `float32` or `uint16`.
 
 
 ---
