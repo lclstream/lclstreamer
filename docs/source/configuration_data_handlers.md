@@ -64,3 +64,11 @@ silently dropping data.
   that the handler creates. Currently only the `PUSH` socket type is supported, and
   this parameter can only take the value `push`. The default value of this parameter is
   `push`. Example: `push`
+
+* `distribute` (bool): If it is set to `True`, the ranks distribute the data round-robin
+  across the URLs in the urls list, with each rank connecting to a subset of the URLs.
+  When set to `False` and multiple URLs are provided, every rank connects to every URL
+  and sends the same data to each destination.
+
+* `buffer` (int): Buffer size for the ZMQ socket can be set via this parameter. To use the
+  OS default buffer size the value should be left as 0.
