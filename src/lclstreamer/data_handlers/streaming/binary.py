@@ -115,7 +115,7 @@ class BinaryStreamingPushDataHandlerZmq:
             data: A bytes object containing serialized event data
         """
         try:
-            self._socket.send(data, copy=False)
+            self._socket.send(data)
         except ZMQError as e:
             log.error("ZMQ Send failed: %s", e)
 
