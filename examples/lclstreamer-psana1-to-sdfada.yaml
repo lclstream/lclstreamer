@@ -39,6 +39,8 @@ data_handlers:
     - type: BinaryDataStreamingDataHandler
       urls:
           - "tcp://sdfada001:12321"
+      distribute: False
+      buffer: 0
       role: client
       library: zmq
       socket_type: push
