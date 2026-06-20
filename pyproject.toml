@@ -20,7 +20,6 @@ dependencies = [
     "mypy",
     "h5py-stubs",
     "cbor",
-    "bitshuffle",
     "pytest",
     "types-PyYAML"
 ]
