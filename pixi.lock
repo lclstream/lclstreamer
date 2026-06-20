@@ -3624,7 +3624,7 @@ packages:
 - pypi: ./
   name: lclstreamer
   version: 0.3.0
-  sha256: b2d60dcfc453804a5d10ee7b3db9ebe94e0a36a7165ff43f9f4beb7cd8835b30
+  sha256: d4957d581ad32499b6d05ecdae9b9381ee1ed834828eb37a72fddd1beab20289
   requires_dist:
   - typer
   - numpy
@@ -3643,7 +3643,6 @@ packages:
   - mypy
   - h5py-stubs
   - cbor
-  - bitshuffle
   - pytest
   - types-pyyaml
   requires_python: '>=3.11,<3.14'
