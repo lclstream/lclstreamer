@@ -14,7 +14,7 @@ RUN cd lclstreamer pixi install --locked -e psana${PSANA_VERSION} \
     && pixi clean cache --yes \
     && rm -rf /root/.cache/rattler
 ENV PATH=/opt/openmpi/bin:$PATH
-ENV LD_LIBRARY_PATH=/opt/openmpi/bin:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/openmpi/lib:$LD_LIBRARY_PATH
 RUN cd lclstreamer && pixi shell-hook -e psana${PSANA_VERSION} -s bash > /shell-hook \
     && echo "#!/bin/bash" > /app/entrypoint.sh \
     && cat /shell-hook >> /app/entrypoint.sh \
@@ -34,10 +34,11 @@ RUN apt-get update \
         --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenMPI
+# install open mpi
 ARG OMPI_VERSION=4.1.6
-ENV OMPI_MCA_plm_rsh_agent=/bin/true
-ENV PATH=/opt/openmpi/bin:$PATH
+# set so apptainer/mpirun launches work without an remote shell agent
+ENV OMPI_MCA_plm_rsh_agent=/bin/true 
+ENV PATH=/opt/openmpi/bin:$PATH 
 ENV LD_LIBRARY_PATH=/opt/openmpi/lib:$LD_LIBRARY_PATH
 RUN wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OMPI_VERSION}.tar.bz2 \
     && tar xjf openmpi-${OMPI_VERSION}.tar.bz2 && cd openmpi-${OMPI_VERSION} \
