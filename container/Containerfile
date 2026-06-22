@@ -6,8 +6,7 @@ RUN apt-get update && apt-get install -y \
         git \ 
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
-#RUN git clone https://github.com/lclstream/lclstreamer
-COPY lclstreamer lclstreamer
+RUN git clone https://github.com/lclstream/lclstreamer
 RUN if [ -n "COMMIT" ]; then \
       cd lclstreamer && git checkout ${COMMIT}; \
     fi
