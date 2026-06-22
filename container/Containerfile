@@ -1,5 +1,9 @@
 FROM ghcr.io/prefix-dev/pixi:0.70.2 AS build
 WORKDIR /app
+# git required for pixi with git deps (stream.py)
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
 # mpi4py links against the OpenMPI ABI thru conda-forge mpi-external stub.
 # OpenMPI is built in the runtime stage below
 ARG PSANA_VERSION=2extmpi
