@@ -1,16 +1,10 @@
 FROM ghcr.io/prefix-dev/pixi:0.70.2 AS build
 WORKDIR /app
-ARG COMMIT
+# mpi4py links against the OpenMPI ABI thru conda-forge mpi-external stub.
+# OpenMPI is built in the runtime stage below
 ARG PSANA_VERSION=2extmpi
-RUN apt-get update && apt-get install -y \
-        git \ 
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/lclstream/lclstreamer
-RUN if [ -n "COMMIT" ]; then \
-      cd lclstreamer && git checkout ${COMMIT}; \
-    fi
-RUN cd lclstreamer pixi install --locked -e psana${PSANA_VERSION} \
+COPY . /app/lclstreamer
+RUN cd lclstreamer && pixi install --locked -e psana${PSANA_VERSION} \
     && pixi clean cache --yes \
     && rm -rf /root/.cache/rattler
 ENV PATH=/opt/openmpi/bin:$PATH
