@@ -1,0 +1,34 @@
+# Version control
+.git
+.gitattributes
+.gitignore
+
+# Local pixi environment (rebuilt inside the image)
+.pixi
+
+# Python caches and build artifacts
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+build
+dist
+*.egg
+
+# Virtual environments
+.venv
+venv
+
+# Docs build output
+docs/_build
+docs/source/_build
+
+# Editor / tooling
+.zed
+.vscode
+.idea
+.mypy_cache
+.ruff_cache
+.pytest_cache
+
+# OS cruft
+.DS_Store
