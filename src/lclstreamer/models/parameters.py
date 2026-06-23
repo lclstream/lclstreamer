@@ -93,6 +93,23 @@ class DataSourceParameters(_CustomBaseModel):
     type: str
     model_config = ConfigDict(extra="allow")
 
+class GenericRandomNumpyArrayParameters(_CustomBaseModel):
+    """
+    Parameters for the GenericRandomNumpyArray class
+
+    """
+
+    array_shape: tuple[int, ...]
+    array_dtype: str
+    always_random: bool
+
+class ConstValueParameters(_CustomBaseModel):
+    """
+    Parameters for ConstValue class
+    """
+
+    value: int | float
+    dtype: str
 
 ####### Processing Pipelines #########
 

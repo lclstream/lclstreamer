@@ -12,13 +12,10 @@ from ...utils.typing import (
     StrFloatIntNDArray,
 )
 from .data_sources import (
-    FloatValue as FloatValue,
+    ConstValue as ConstValue,
 )
 from .data_sources import (
     GenericRandomNumpyArray as GenericRandomNumpyArray,
-)
-from .data_sources import (
-    IntValue as IntValue,
 )
 
 
