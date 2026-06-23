@@ -765,7 +765,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/bd/e0/1eed384f02555dde685fff1a1ac805c1c7dcb6dd019c916fe659b1c1f9ec/types_pyyaml-6.0.12.20250915-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/69/cd203477f944c353c31bade965f880aa1061fd6bf05ded0726ca845b6ff7/typing_inspection-0.4.1-py3-none-any.whl
       - pypi: ./
-  psana2nompi:
+  psana2extmpi:
     channels:
     - url: https://conda.anaconda.org/lcls-ii/
     - url: https://conda.anaconda.org/conda-forge/label/mpi-external/
