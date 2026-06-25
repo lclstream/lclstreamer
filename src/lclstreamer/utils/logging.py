@@ -16,6 +16,15 @@ def log_error_and_exit(error: str) -> NoReturn:
     log.error(error)
     sys.exit(1)
 
+def log_error(error: str) -> None:
+    """
+    Logs an error message
+
+    Arguments:
+
+        error: The error message to log
+    """
+    log.error(error)
 
 def log_info(info: str) -> None:
     """
@@ -25,7 +34,17 @@ def log_info(info: str) -> None:
 
         info: The informational message to log
     """
-    log.error(info)
+    log.info(info)
+
+def log_debug(debugmsg: str) -> None:
+    """
+    Logs a debug message
+
+    Arguments:
+
+        debugmsg: The debug message to log
+    """
+    log.debug(debugmsg)
 
 
 class RichHandlerWithAggregation(RichHandler):
@@ -103,11 +122,10 @@ class RichHandlerWithAggregation(RichHandler):
 
 
 logging.basicConfig(
+    level=logging.INFO,
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandlerWithAggregation(rich_tracebacks=True, show_path=False)],
 )
 
-
-logging.getLogger("rich").setLevel(logging.INFO)
 log: logging.Logger = logging.getLogger("rich")

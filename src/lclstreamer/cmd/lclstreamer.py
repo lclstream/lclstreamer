@@ -8,6 +8,9 @@ from typing import (
 )
 
 import typer
+from ..utils.logging import log
+import logging
+import socket
 from mpi4py import MPI
 from stream.core import Source, stream
 from stream.ops import map, take, tap  # pyright: ignore[reportUnknownVariableType]
@@ -106,6 +109,13 @@ def main(
             "--num-events", "-n", help="number of data events to read before stopping"
         ),
     ] = 0,
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug", "-d", help="enable showing debug info",
+            is_flag=True,
+        ),
+    ] = False,
 ) -> None:
     """
     An application that retrieves data from an event source, processes it, serializes
@@ -114,13 +124,16 @@ def main(
     further data handling are defined by the content of a configuration file
     """
 
+    if debug:
+        log.setLevel(logging.DEBUG)
+
     # 1. Read and recover configuration parameters
     mpi_size: int = MPI.COMM_WORLD.Get_size()
     mpi_rank: int = MPI.COMM_WORLD.Get_rank()
 
     parameters: Parameters = load_configuration_parameters(filename=config)
 
-    print(f"[Rank {mpi_rank}] Initializing event source....")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source....")
 
     source: EventSourceProtocol = initialize_event_source(
         parameters=parameters,
@@ -128,21 +141,21 @@ def main(
         worker_rank=mpi_rank,
     )
 
-    print(f"[Rank {mpi_rank}] Initializing event source: Done!")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source: Done!")
 
-    print(f"[Rank {mpi_rank}] Initializing processing pipeline....")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline....")
     processing_pipeline: ProcessingPipelineProtocol = initialize_processing_pipeline(
         parameters
     )
-    print(f"[Rank {mpi_rank}] Initializing processing pipeline: Done!")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline: Done!")
 
-    print(f"[Rank {mpi_rank}] Initializing data serializer....")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer....")
     data_serializer: DataSerializerProtocol = initialize_data_serializer(parameters)
-    print(f"[Rank {mpi_rank}] Initializing data serializer: Done!")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer: Done!")
 
-    print(f"[Rank {mpi_rank}] Initializing data handlers....")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers....")
     data_handlers: list[DataHandlerProtocol] = initialize_data_handlers(parameters)
-    print(f"[Rank {mpi_rank}] Initializing data handlers: Done!")
+    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers: Done!")
 
     workflow: Any = source.get_events()
 
@@ -165,6 +178,6 @@ def main(
     workflow >>= map(_data_counter)
 
     for stat in workflow >> clock():
-        print(f"[Rank {mpi_rank}] {stat}]", flush=True)
+        log.debug(f"[Rank {mpi_rank}] {stat}]")
 
     print(f"[Rank {mpi_rank}] Hello, I'm done now.  Have a most excellent day!")

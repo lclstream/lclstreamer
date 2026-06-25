@@ -9,7 +9,7 @@ import socket
 from ...models.parameters import (
     BinaryDataStreamingDataHandlerParameters,
 )
-from ...utils.logging import log
+from ...utils.logging import log_info, log_error
 from ...utils.protocols import DataHandlerProtocol
 
 
@@ -76,8 +76,8 @@ class BinaryStreamingPushDataHandlerZmq:
         self._socket.setsockopt(SNDHWM, 5)
 
         urls: list [str]
+        mpi_rank: int = MPI.COMM_WORLD.Get_rank()
         if data_handler_parameters.distribute:
-            mpi_rank: int = MPI.COMM_WORLD.Get_rank()
             url_length: int = len(data_handler_parameters.urls)
             world_size: int = MPI.COMM_WORLD.Get_size()
             if world_size < url_length:
@@ -86,10 +86,10 @@ class BinaryStreamingPushDataHandlerZmq:
             else:
                 urls = [data_handler_parameters.urls[mpi_rank % url_length]]
             if mpi_rank == 0:
-                log.info(f"Expecting {url_length} machines for receiving...")
-            log.info(f"Rank: {mpi_rank} on {socket.gethostname()} -> {urls}")
+                log_info(f"Expecting {url_length} machines for receiving...")
         else:
             urls = data_handler_parameters.urls
+        log_info(f"Rank: {mpi_rank} on {socket.gethostname()} -> {urls}")
         url: str
         for url in urls:
             try:
@@ -100,7 +100,7 @@ class BinaryStreamingPushDataHandlerZmq:
                     # Add delay to allow ZMQ connection to fully establish (slow joiner fix)
                     time.sleep(1.0)
             except ZMQError as err:
-                log.error(
+                log_error(
                     f"Unable to connect to the URL {url} due to the following "
                     f"error: {err}"
                 )
@@ -117,7 +117,7 @@ class BinaryStreamingPushDataHandlerZmq:
         try:
             self._socket.send(data)
         except ZMQError as e:
-            log.error("ZMQ Send failed: %s", e)
+            log_error("ZMQ Send failed: %s", e)
 
     def close(self) -> None:
         """Explicitly close the socket and context with timeout"""
