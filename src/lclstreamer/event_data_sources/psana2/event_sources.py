@@ -5,13 +5,12 @@ from psana import DataSource  # type: ignore
 from stream.core import source
 
 from ...models.parameters import DataSourceParameters, Psana2EventSourceParameters
-from ...utils.logging import log_error_and_exit
+from ...utils.logging import log_error_and_exit, log_info
 from ...utils.protocols import (
     DataSourceProtocol,
     EventSourceProtocol,
 )
 from ...utils.typing import StrFloatIntNDArray
-from ...utils.logging import log_info
 from ..generic.data_sources import GenericRandomNumpyArray as GenericRandomNumpyArray
 from .data_sources import (
     Psana2DetectorInterface as Psana2DetectorInterface,
@@ -46,6 +45,8 @@ def _parse_source_identifier(source_identifier: str) -> dict[str, str | int]:
             source_dict["max_events"] = int(
                 item.split("max_events=")[1].strip().lstrip()
             )
+        elif item.startswith("live="):
+            source_dict["live"] = bool(int(item.split("live=")[1].strip().lstrip()))
         else:
             log_error_and_exit(
                 "Part of the source string for psana2 cannot be error=:\n{item}"
