@@ -34,7 +34,9 @@ processing_pipeline:
 data_serializer:
     type: HDF5BinarySerializer
     compression_level: 3
-    compression: null
+    compression:
+    fields:
+        random: /data/random
 
 data_handlers:
      - type: BinaryFileWritingDataHandler

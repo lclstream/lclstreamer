@@ -3,19 +3,19 @@ skip_incomplete_events: false
 
 event_source:
     type: InternalEventSource
-    number_of_events_to_generate: 76
+    number_of_events_to_generate: 1500
 
 data_sources:
-    random_example1:
-        type: GenericRandomNumpyArray
-        array_shape: 20,2
-        array_dtype: float32
-        always_random: True
+        # random_example1:
+        #type: GenericRandomNumpyArray
+        #array_shape: 20,2
+        #array_dtype: float32
+        #always_random: True
     random_example2:
         type: GenericRandomNumpyArray
-        array_shape: 3,
+        array_shape: 32,
         array_dtype: uint16
-        always_random: False
+        #always_random: True
     const_data_example1:
         type: ConstValue
         value: 6.4
@@ -24,17 +24,25 @@ data_sources:
         type: ConstValue
         value: [6, 3, 1]
         dtype: uint32
+    const_data_example3:
+        type: ConstValue
+        value: 6,
+        dtype: uint32
+    const_data_example4:
+        type: ConstValue
+        value: 6,1
+        dtype: uint32
 
 processing_pipeline:
     type: BatchProcessingPipeline
-    batch_size: 2
+    batch_size: 1
 
 data_serializer:
     type: HDF5BinarySerializer
-    compression_level: 3
-    compression: null
-    #fields:
-    #    random: /data/random
+    compression_level: 0
+    #compression: None
+    fields:
+        random_example2: /data/random
     #    int: /data/int
     #    float: /data/float
 
@@ -45,7 +53,7 @@ data_handlers:
     #      write_directory: workspace/output
     - type: BinaryDataStreamingDataHandler
       urls:
-          - "tcp://127.0.0.1:12321"
+          - "tcp://134.79.23.43:5001"
       distribute: False
       buffer: 0
       role: client

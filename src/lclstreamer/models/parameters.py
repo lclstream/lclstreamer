@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Dict, List, Literal, Self, Union
+from typing import Dict, List, Literal, Self, Union, Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 from typing_extensions import Annotated
 
 
@@ -77,39 +77,104 @@ EventSourceParameters = Annotated[
 
 ###### Data Sources #######
 
-
-class DataSourceParameters(_CustomBaseModel):
-    """
-    Base configuration parameters for a data source
-
-    Individual data source implementations may extend these parameters with
-    additional fields
-
-    Attributes:
-
-        type: The class name of the data source implementation to instantiate
-    """
-
-    type: str
-    model_config = ConfigDict(extra="allow")
-
 class GenericRandomNumpyArrayParameters(_CustomBaseModel):
     """
     Parameters for the GenericRandomNumpyArray class
 
     """
-
-    array_shape: tuple[int, ...]
+    type: Literal["GenericRandomNumpyArray"]
+    array_shape: int | tuple[int, ...]
     array_dtype: str
-    always_random: bool
+    always_random: bool = True
+
+    @field_validator("array_shape", mode="before")
+    @classmethod
+    def convert_int_to_tuple(cls, v):
+        if isinstance(v, str):
+            parts = [p.strip() for p in v.split(",") if p.strip()]
+            return tuple(int(p) for p in parts)
+        if isinstance(v, int):
+            return (v,)
+        return v
 
 class ConstValueParameters(_CustomBaseModel):
     """
     Parameters for ConstValue class
     """
-
-    value: int | float
+    type: Literal["ConstValue"]
+    value: int | float | list[int | float]
     dtype: str
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def parse_value(cls, v: Any):
+        if isinstance(v, str): # "6," -> [6]
+            parts = [p.strip() for p in v.split(",") if p.strip()]
+            if len(parts) == 1:
+                return int(parts[0]) if parts[0].isdigit() else float(parts[0])
+            return [
+                int(p) if p.isdigit() else float(p)
+                for p in parts
+            ]
+        return v
+
+class _PsanaDetectorInterfaceParameters(_CustomBaseModel):
+    psana_name: str
+    psana_fields: list[str] | str | None = None
+
+    @model_validator(mode="after")
+    def validate_fields(self):
+        if ":" not in self.psana_name and self.psana_fields is None:
+            raise ValueError(
+                "psana_fields must be specified when psana_name is not a PV."
+            )
+        return self
+
+class Psana1DetectorInterfaceParameters(_PsanaDetectorInterfaceParameters):
+    type: Literal["Psana1DetectorInterface"]
+
+class Psana2DetectorInterfaceParameters(_PsanaDetectorInterfaceParameters):
+    type: Literal["Psana2DetectorInterface"]
+    dtype: str | None = None
+
+class Psana2TimestampParameters(_CustomBaseModel):
+    """
+    Parameters for psana2 timestamp interface
+    """
+    type: Literal["Psana2Timestamp"]
+
+class Psana1TimestampParameters(_CustomBaseModel):
+    """
+    Parameters for psana1 timestamp interface
+    """
+    type: Literal["Psana1Timestamp"]
+
+class SourceIdentifierParameters(_CustomBaseModel):
+    """
+    Parameters for source identifier data source interface
+    """
+    type: Literal["SourceIdentifier"]
+
+class Psana2RunInfoParameters(_CustomBaseModel):
+    """
+    Parameters for run info data source interface
+    """
+    type: Literal["Psana2RunInfo"]
+
+DataSourceParameters = Annotated[
+    Union[
+        GenericRandomNumpyArrayParameters,
+        ConstValueParameters,
+        Psana1DetectorInterfaceParameters,
+        Psana2DetectorInterfaceParameters,
+        Psana1TimestampParameters,
+        Psana2TimestampParameters,
+        SourceIdentifierParameters,
+        Psana2RunInfoParameters,
+    ],
+    Field(discriminator="type"),
+]
+
 
 ####### Processing Pipelines #########
 
@@ -241,7 +306,7 @@ class HDF5BinarySerializerParameters(_CustomBaseModel):
     """
 
     type: Literal["HDF5BinarySerializer"]
-    compression_level: int = 3
+    compression_level: int = 0
     compression: (
         Literal[
             "gzip",
@@ -252,6 +317,7 @@ class HDF5BinarySerializerParameters(_CustomBaseModel):
         ]
         | None
     ) = None
+    fields: dict[str, str]
 
 
 DataSerializerParameters = Annotated[

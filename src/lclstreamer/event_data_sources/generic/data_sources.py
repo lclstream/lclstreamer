@@ -29,18 +29,10 @@ class ConstValue(DataSourceProtocol):
             parameters: The configuration parameters
         """
         del additional_info
-        extra_parameters: dict[str, Any] | None = parameters.__pydantic_extra__
+        extra_parameters: dict[str, Any] | None = parameters.model_dump()
         if extra_parameters is None:
             log_error_and_exit(
                 f"Entries needed by the {name} data source are not defined"
-            )
-        if "dtype" not in extra_parameters:
-            log_error_and_exit(
-                f"Entry 'dtype' is not defined for data source {name}"
-            )
-        if "value" not in extra_parameters:
-            log_error_and_exit(
-                f"Entry 'value' is not defined for data source {name}"
             )
         self._dtype = extra_parameters["dtype"]
         try:
@@ -71,6 +63,7 @@ class ConstValue(DataSourceProtocol):
             An 1d array storing the value defined by the data source
             configuration parameters.
         """
+        print(self._data_dict)
         return self._data_dict
 
 class GenericRandomNumpyArray(DataSourceProtocol):
@@ -94,36 +87,16 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             parameters: The configuration parameters
         """
         del additional_info
-        extra_parameters: dict[str, Any] | None = parameters.__pydantic_extra__
+        extra_parameters: dict[str, Any] | None = parameters.model_dump()
         if extra_parameters is None:
             log_error_and_exit(
                 f"Entries needed by the {name} data source are not defined"
             )
-        if "array_shape" not in extra_parameters:
-            log_error_and_exit(
-                f"Entry 'array_shape' is not defined for data source {name}"
-            )
-        if "array_dtype" not in extra_parameters:
-            log_error_and_exit(
-                f"Entry 'array_dtype' is not defined for data source {name}"
-            )
-        if "always_random" not in extra_parameters:
-            log_error_and_exit(
-                f"Entry 'always_random' is not defined for data source {name}"
-            )
-
         try:
-            self._array_shape: tuple[int, ...] = tuple(
-                int(x) for x in extra_parameters["array_shape"].split(",") if x.strip()
-            )
+            self._array_shape: tuple[int, ...] = tuple(extra_parameters["array_shape"])
         except ValueError:
             log_error_and_exit(
                 f"Parameter 'array_shape' for data source {name} is malformed"
-            )
-        except AttributeError:
-            log_error_and_exit(
-                f"Parameter 'array_shape' for {name} is not a tuple, \
-                  If the shape is column vector or one single value use: (X,) to define it."
             )
         try:
             self._array_dtype: numpy.dtype[numpy.number] = numpy.dtype(
@@ -249,7 +222,7 @@ class BaseDetectorInterface(DataSourceProtocol):
             parameters: The data source configuration parameters
         """
         self._name: str = name
-        extra_parameters: dict[str, Any] | None = parameters.__pydantic_extra__
+        extra_parameters: dict[str, Any] | None = parameters.model_dump()
         self._call_get_data: list[tuple[str, Any, Any]] = []
 
         if extra_parameters is None:
@@ -271,7 +244,7 @@ class BaseDetectorInterface(DataSourceProtocol):
         else:
             self.dtype = extra_parameters["dtype"]
 
-        if "psana_fields" not in extra_parameters:
+        if extra_parameters["psana_fields"] is None:
             if ":" in self._detector_name:
                 # it is a PV
                 self._call_get_data.append((self._detector_name, detector_interface, self._get_callable_with_event))
