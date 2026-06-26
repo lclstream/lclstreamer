@@ -89,14 +89,14 @@ mpi4py = { version="*", channel="conda-forge" }
 
 [tool.pixi.feature.psana2.dependencies]
 python = "3.13.*"
-psana = { version="==4.3.1", channel="lcls-ii" }
+psana = { version="==4.3.2", channel="lcls-ii" }
 mpi4py = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge" }
 prometheus-cpp = {version="*", channel="conda-forge" }
 
 [tool.pixi.feature.psana2extmpi.dependencies]
 python = "3.13.*"
-psana = { version="==4.3.1", channel="lcls-ii" }
+psana = { version="==4.3.2", channel="lcls-ii" }
 mpi4py = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge/label/mpi-external" }
 prometheus-cpp = {version="*", channel="conda-forge" }
