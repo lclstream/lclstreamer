@@ -1,6 +1,8 @@
+import os
 from collections.abc import Generator
 from typing import Any, cast
 
+from mpi4py import MPI
 from psana import DataSource  # type: ignore
 from stream.core import source
 
@@ -27,10 +29,13 @@ def _parse_source_identifier(source_identifier: str) -> dict[str, str | int]:
     # Parses a source identifier string into a keyword-argument dictionary
     # The source identifier is a comma-separated string of key=value pairs
 
+    rank: int = MPI.COMM_WORLD.Get_rank()
+
     source_dict: dict[str, str | int] = {}
     source_items: list[str] = source_identifier.split(",")
     item: str
     for item in source_items:
+        print(item)
         if item.startswith("shmem="):
             source_dict["shmem"] = item.split("shmem=")[1].strip().lstrip()
         elif item.startswith("exp="):
@@ -45,8 +50,12 @@ def _parse_source_identifier(source_identifier: str) -> dict[str, str | int]:
             source_dict["max_events"] = int(
                 item.split("max_events=")[1].strip().lstrip()
             )
-        elif item.startswith("live="):
-            source_dict["live"] = bool(int(item.split("live=")[1].strip().lstrip()))
+        elif item.strip().lstrip() == "live":
+            source_dict["live"] = True
+            log_info(f"Rank: {rank} running in live mode")
+        elif item.strip().lstrip() == "ffb":
+            os.environ["SIT_PSDM_DATA"] = "/sdf/data/lcls/drpsrcf/ffb"
+            log_info(f"Rank: {rank} reading data from the FFB filesystem")
         else:
             log_error_and_exit(
                 "Part of the source string for psana2 cannot be error=:\n{item}"
