@@ -361,7 +361,7 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
     urls: List[str]
     distribute: bool
     buffer: int
-    role: Literal["server", "client"] = "server"
+    role: Literal["server", "client"] = "client"
     library: Literal["zmq"] = "zmq"
     socket_type: Literal["push"] = "push"
 
