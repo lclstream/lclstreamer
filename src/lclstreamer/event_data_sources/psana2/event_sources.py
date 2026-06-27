@@ -35,7 +35,6 @@ def _parse_source_identifier(source_identifier: str) -> dict[str, str | int]:
     source_items: list[str] = source_identifier.split(",")
     item: str
     for item in source_items:
-        print(item)
         if item.startswith("shmem="):
             source_dict["shmem"] = item.split("shmem=")[1].strip().lstrip()
         elif item.startswith("exp="):
@@ -46,6 +45,8 @@ def _parse_source_identifier(source_identifier: str) -> dict[str, str | int]:
             source_dict["files"] = item.split("files=")[1].strip().lstrip()
         elif item.startswith("drp="):
             source_dict["drp"] = item.split("drp=")[1].strip().lstrip()
+        elif item.startswith("dir="):
+            source_dict["dir"] = item.split("dir=")[1].strip().lstrip()
         elif item.startswith("max_events="):
             source_dict["max_events"] = int(
                 item.split("max_events=")[1].strip().lstrip()
