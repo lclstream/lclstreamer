@@ -120,12 +120,17 @@ class RichHandlerWithAggregation(RichHandler):
             if self._recurring_msg_counter % self._recurring_msg_emit_interval == 0:
                 super().emit(self._last_recurring_record)
 
+def get_lclstreamerlogger() -> logging.Logger:
+    """
+    Sets up lclstreamer logger
+    """
+    log = logging.getLogger('lclstreamer')
+    log.setLevel(logging.INFO)
+    log.propagate = False
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandlerWithAggregation(rich_tracebacks=True, show_path=False)],
-)
+    handler = RichHandlerWithAggregation(rich_tracebacks=True, show_path=False, 
+        log_time_format="[%X]")
+    log.addHandler(handler)
+    return log
 
-log: logging.Logger = logging.getLogger("rich")
+log = get_lclstreamerlogger()
