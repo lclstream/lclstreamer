@@ -8,7 +8,7 @@ from typing import (
 )
 
 import typer
-from ..utils.logging import log
+from ..utils.logging import log, log_debug
 import logging
 import socket
 from mpi4py import MPI
@@ -133,7 +133,7 @@ def main(
 
     parameters: Parameters = load_configuration_parameters(filename=config)
 
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source....")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source....")
 
     source: EventSourceProtocol = initialize_event_source(
         parameters=parameters,
@@ -141,21 +141,21 @@ def main(
         worker_rank=mpi_rank,
     )
 
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source: Done!")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing event source: Done!")
 
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline....")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline....")
     processing_pipeline: ProcessingPipelineProtocol = initialize_processing_pipeline(
         parameters
     )
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline: Done!")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing processing pipeline: Done!")
 
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer....")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer....")
     data_serializer: DataSerializerProtocol = initialize_data_serializer(parameters)
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer: Done!")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data serializer: Done!")
 
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers....")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers....")
     data_handlers: list[DataHandlerProtocol] = initialize_data_handlers(parameters)
-    log.debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers: Done!")
+    log_debug(f"[Rank {mpi_rank} {socket.gethostname()}] Initializing data handlers: Done!")
 
     workflow: Any = source.get_events()
 
@@ -178,6 +178,6 @@ def main(
     workflow >>= map(_data_counter)
 
     for stat in workflow >> clock():
-        log.debug(f"[Rank {mpi_rank}] {stat}]")
+        log_debug(f"[Rank {mpi_rank}] {stat}]")
 
     print(f"[Rank {mpi_rank}] Hello, I'm done now.  Have a most excellent day!")
