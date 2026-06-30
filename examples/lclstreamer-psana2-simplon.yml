@@ -1,6 +1,4 @@
-source_identifier: exp=mfx100852324,run=51
-#source_identifier: exp=mfx100848724,run=51
-
+source_identifier: "{{ source_identifier }}"
 skip_incomplete_events: True
 
 data_sources:
@@ -9,8 +7,8 @@ data_sources:
 
     detector_data:
         type: Psana2DetectorInterface
-        psana_name: jungfrau
-        psana_fields: raw.calib # Use raw.calib for calibrated data
+        psana_name: "{{ areadetector_name }}" # jungfrau
+        psana_fields: "{{ areadetector_field }}" # Use raw.calib for calibrated data
 
         #    assembled_detector_data:
         #        type: Psana2DetectorInterface
@@ -19,11 +17,11 @@ data_sources:
 
     photon_wavelength:
         type: Psana2DetectorInterface
-        psana_name: "SIOC:SYS0:ML00:AO192"
+        psana_name: "{{ photon_wavelength_pv }}" # "SIOC:SYS0:ML00:AO192"
 
     detector_geometry:
         type: Psana2DetectorInterface
-        psana_name: "jungfrau"
+        psana_name: "{{ areadetector_name }}" # "jungfrau"
         psana_fields: [
                 "_detid", # Detector ID
                 "raw._det_geotxt_default", # Geometry data
@@ -33,7 +31,7 @@ data_sources:
 
     beam_data: # Optional
         type: Psana2DetectorInterface
-        psana_name: "ebeamh"
+        psana_name: "{{ ebeam_detector }}" # ebeamh
         psana_fields: [
                 "raw.ebeamUndAngX", # Angle X
                 "raw.ebeamUndAngY", # Angle Y
@@ -50,24 +48,23 @@ event_source:
 
 processing_pipeline:
     type: BatchProcessingPipeline
-    batch_size: 1
+    batch_size: {{ batch_size }} # 1
 
 data_serializer:
     type: SimplonBinarySerializer
-    data_source_to_serialize: jungfrau.raw.calib
-    polarization_fraction: 0
-    polarization_axis: [1.0, 0.0, 0.0]
-    data_collection_rate: "120Hz"
-    detector_name: "jungfrau"
+    data_source_to_serialize: "{{ areadetector_name }}.{{ areadetector_field }}"
+    polarization_fraction: {{ polarization_fraction }} # e.g. 0
+    polarization_axis: {{ polarization_axis }} # e.g. [1.0, 0.0, 0.0]
+    data_collection_rate: "{{ collection_rate }}"  # e.g. "120Hz"
+    detector_name: "{{ areadetector_name }}"  # "jungfrau"
     detector_type: "AreaDetector"
 
 data_handlers:
     - type: BinaryDataStreamingDataHandler
       urls:
-          - "tcp://127.0.0.1:12321" #127.0.0.1:12321" #134.79.23.43:5000" #127.0.0.1:12321"
+          - "{{ out_url }}"  # "tcp://sdfdtn002:5001"
       distribute: False
       buffer: 0
       role: client
       library: zmq
-      #library: zmq
       socket_type: push
