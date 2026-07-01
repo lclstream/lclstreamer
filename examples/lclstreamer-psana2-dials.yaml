@@ -1,5 +1,4 @@
 source_identifier: exp=mfx100852324,run=51
-#source_identifier: exp=mfx100848724,run=51
 
 skip_incomplete_events: True
 
@@ -12,14 +11,14 @@ data_sources:
         psana_name: jungfrau
         psana_fields: raw.calib # Use raw.calib for calibrated data
 
-        #    assembled_detector_data:
-        #        type: Psana2DetectorInterface
-        #        psana_name: jungfrau
-        #        psana_fields: raw.image
-
     photon_wavelength:
         type: Psana2DetectorInterface
         psana_name: "SIOC:SYS0:ML00:AO192"
+
+    spectrometer: # Optional; omitted per-event when missing
+        type: Psana2DetectorInterface
+        psana_name: feespec
+        psana_fields: raw.hproj
 
     detector_geometry:
         type: Psana2DetectorInterface
@@ -57,6 +56,8 @@ processing_pipeline:
     batch_size: 1
 
 data_serializer:
+    # The Simplon serializer also carries the optional per-event spectrometer and the
+    # real photon_wavelength PV when their sources are configured below.
     type: SimplonBinarySerializer
     data_source_to_serialize: jungfrau.raw.calib
     polarization_fraction: 0
@@ -64,14 +65,17 @@ data_serializer:
     data_collection_rate: "120Hz"
     detector_name: "jungfrau"
     detector_type: "AreaDetector"
+    # Flattened data key of the spectrometer source (built as psana_name.psana_fields).
+    spectrometer_source: feespec.raw.hproj
+    # Optional real photon_wavelength PV (reported in nm; converted to Angstrom).
+    photon_wavelength_source: "SIOC:SYS0:ML00:AO192"
 
 data_handlers:
     - type: BinaryDataStreamingDataHandler
       urls:
-          - "tcp://127.0.0.1:12321" #127.0.0.1:12321" #134.79.23.43:5000" #127.0.0.1:12321"
+          - "tcp://127.0.0.1:12321"
       distribute: False
       buffer: 0
       role: client
       library: zmq
-      #library: zmq
       socket_type: push

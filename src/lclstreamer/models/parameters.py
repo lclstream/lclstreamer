@@ -271,6 +271,14 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
         detector_name: Human-readable name of the detector
 
         detector_type: Model or type string identifying the detector hardware
+
+        photon_wavelength_source: Optional flattened data key of the photon_wavelength
+            PV (e.g. ``"SIOC:SYS0:ML00:AO192"``). When unset, photon_wavelength is 0.
+
+        spectrometer_source: Optional flattened data key of a spectrometer source to
+            embed in each image message (e.g. ``"feespec.raw.hproj"``). When unset, no
+            spectrometer fields are added; when set but missing for an event, the frame
+            is still sent without them.
     """
 
     type: Literal["SimplonBinarySerializer"]
@@ -280,6 +288,8 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
     data_collection_rate: str
     detector_name: str
     detector_type: str
+    photon_wavelength_source: str | None = None
+    spectrometer_source: str | None = None
 
 
 class HDF5BinarySerializerParameters(_CustomBaseModel):
