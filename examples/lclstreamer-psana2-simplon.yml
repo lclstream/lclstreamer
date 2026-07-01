@@ -35,10 +35,6 @@ data_sources:
         type: Psana2DetectorInterface
         psana_name: "ebeamh"
         psana_fields: [
-                "raw.ebeamUndAngX", # Angle X
-                "raw.ebeamUndAngY", # Angle Y
-                "raw.ebeamUndPosX", # Pos X
-                "raw.ebeamUndPosY", # Pos Y
                 # Photon energy (eV), psana2's undulator-equation conversion of the
                 # eBeam L3 energy. Shipped as photon_energy and used as a per-shot
                 # wavelength fallback. (Not raw.ebeamL3Energy -- that is the

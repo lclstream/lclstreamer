@@ -99,32 +99,21 @@ class SimplonBinarySerializer(DataSerializerProtocol):
     def _beam_fields(
         self, data: dict[str, StrFloatIntNDArray | None]
     ) -> dict[str, Any]:
-        """The beam-direction and per-shot photon energy/wavelength fields for an image
-        message, or an empty dict when the eBeam fields are absent or back-filled as
-        missing (all-NaN) this event, so the consumer falls back rather than using
-        fabricated values."""
-        try:
-            energy: Any = data["ebeamh.raw.ebeamPhotonEnergy"][-1]
-            beam: dict[str, Any] = {
-                "beam_direction": {
-                    "angle_x": data["ebeamh.raw.ebeamUndAngX"][-1],
-                    "angle_y": data["ebeamh.raw.ebeamUndAngY"][-1],
-                    "position_x": data["ebeamh.raw.ebeamUndPosX"][-1],
-                    "position_y": data["ebeamh.raw.ebeamUndPosY"][-1],
-                },
-                # psana2's undulator-equation conversion of the eBeam L3 energy to the
-                # true per-shot photon energy in eV (the consumer divides
-                # factor_ev_angstrom by this). Do NOT ship the raw ebeamL3Energy here:
-                # that is the electron-beam energy in MeV, not a photon energy.
-                "photon_energy": energy,
-                "photon_wavelength": self._photon_wavelength(data),
-            }
-        except KeyError as e:
-            log_info(f"Field: {e.args[0]} not found in data_sources. Skipping.")
+        """The per-shot photon energy/wavelength fields for an image message, or an
+        empty dict when the photon-energy source is unconfigured or its reading is
+        missing (absent or back-filled all-NaN) this event, so the consumer falls back
+        rather than using fabricated values."""
+        block = data.get("ebeamh.raw.ebeamPhotonEnergy")
+        if block is None or block[-1] is None or self._is_missing(block[-1]):
             return {}
-        if self._is_missing(energy):
-            return {}
-        return beam
+        return {
+            # psana2's undulator-equation conversion of the eBeam L3 energy to the
+            # true per-shot photon energy in eV (the consumer divides
+            # factor_ev_angstrom by this). Do NOT ship the raw ebeamL3Energy here:
+            # that is the electron-beam energy in MeV, not a photon energy.
+            "photon_energy": block[-1],
+            "photon_wavelength": self._photon_wavelength(data),
+        }
 
     def _spectrometer_fields(
         self, data: dict[str, StrFloatIntNDArray | None]
