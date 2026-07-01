@@ -48,5 +48,8 @@ RUN wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OMPI_V
 COPY --from=build /app/lclstreamer/.pixi/envs/psana${PSANA_VERSION} /app/lclstreamer/.pixi/envs/psana${PSANA_VERSION}
 COPY --from=build --chmod=0755 /app/entrypoint.sh /app/entrypoint.sh
 COPY activation-psana1.sh activation-psana2.sh /app/lclstreamer/
+# need to add this back in because it is lost in the second layer (editable install above)
+COPY pyproject.toml /app/lclstreamer/pyproject.toml
+COPY src /app/lclstreamer/src
 WORKDIR /app/lclstreamer
 ENTRYPOINT [ "/app/entrypoint.sh" ]
