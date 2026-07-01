@@ -77,6 +77,73 @@ def _filter_incomplete_events(
     print(f"Processed {ev_num + 1} events with {num_dropped} dropped.")
 
 
+def _primary_present(event: dict[str, Any], primary_key: str) -> bool:
+    """
+    Returns whether the primary detector frame is present and non-None in an event
+
+    The flattened primary key may sit at the top level of the event dict or one level
+    inside a data source's nested dict (detector sources return a dict of flattened
+    keys), so both are checked.
+
+    Arguments:
+
+        event: An event dictionary
+
+        primary_key: The flattened data key of the primary detector frame
+
+    Returns:
+
+        present: True if the key is present with a non-None value, False otherwise
+    """
+    if primary_key in event:
+        return event[primary_key] is not None
+    for value in event.values():
+        if isinstance(value, dict) and primary_key in value:
+            return value[primary_key] is not None
+    return False
+
+
+@stream
+def _drop_events_missing_primary(
+    events: Iterator[dict[str, Any]], primary_key: str
+) -> Iterator[dict[str, Any]]:
+    """
+    Drops events whose primary detector frame is missing
+
+    The primary x-ray diffraction frame must be present in every serialized event. An
+    event that lacks it is dropped here, before batching: once events are batched into
+    stacked arrays a missing frame can no longer be distinguished from a valid one (it
+    would be back-filled and shipped as a NaN image), so the drop must happen upstream.
+    Events that carry the primary frame but are missing optional fields (spectrometer,
+    wavelength, beam, geometry) pass through untouched and are still streamed.
+
+    Arguments:
+
+        events: An event iterator
+
+        primary_key: The flattened data key of the primary detector frame (the
+            serializer's ``data_source_to_serialize``)
+
+    Returns:
+
+        events: An event iterator
+    """
+    num_dropped: int = 0
+    num_seen: int = 0
+    event: dict[str, Any]
+    for event in events:
+        num_seen += 1
+        if _primary_present(event, primary_key):
+            yield event
+        else:
+            num_dropped += 1
+    if num_dropped > 0:
+        print(
+            f"Dropped {num_dropped} of {num_seen} events missing the primary frame "
+            f"{primary_key!r}."
+        )
+
+
 def _data_counter(data: bytes) -> int:
     """
     Computes the size of the input data
@@ -164,6 +231,14 @@ def main(
 
     if parameters.skip_incomplete_events is True:
         workflow >>= _filter_incomplete_events(max_consecutive=1)
+
+    # The Simplon serializer requires the primary detector frame in every event; drop
+    # events that are missing it before they are batched (a missing frame cannot be
+    # distinguished once stacked).
+    if parameters.data_serializer.type == "SimplonBinarySerializer":
+        workflow >>= _drop_events_missing_primary(
+            primary_key=parameters.data_serializer.data_source_to_serialize
+        )
 
     workflow >>= processing_pipeline
 
