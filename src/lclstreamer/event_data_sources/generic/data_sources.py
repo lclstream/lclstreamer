@@ -63,7 +63,6 @@ class ConstValue(DataSourceProtocol):
             An 1d array storing the value defined by the data source
             configuration parameters.
         """
-        print(self._data_dict)
         return self._data_dict
 
 class GenericRandomNumpyArray(DataSourceProtocol):

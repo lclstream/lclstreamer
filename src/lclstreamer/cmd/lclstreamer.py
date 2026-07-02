@@ -113,6 +113,7 @@ def main(
         bool,
         typer.Option(
             "--debug", "-d", help="enable showing debug info",
+            envvar="LCLSTREAMER_DEBUG",
             is_flag=True,
         ),
     ] = False,
