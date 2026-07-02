@@ -29,6 +29,7 @@ RUN apt-get update \
         file\
         wget\
         ca-certificates\
+        libucx-dev\
         --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,7 +41,7 @@ ENV PATH=/opt/openmpi/bin:$PATH
 ENV LD_LIBRARY_PATH=/opt/openmpi/lib:${LD_LIBRARY_PATH:-}
 RUN wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OMPI_VERSION}.tar.bz2 \
     && tar xjf openmpi-${OMPI_VERSION}.tar.bz2 && cd openmpi-${OMPI_VERSION} \
-    && ./configure --prefix=/opt/openmpi --quiet > /dev/null \
+    && ./configure --prefix=/opt/openmpi --with-ucx=/usr --quiet > /dev/null \
     && make -j$(nproc) -s all > /dev/null \
     && make -s install > /dev/null \
     && cd .. && rm -rf openmpi-${OMPI_VERSION}*
