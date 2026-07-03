@@ -53,15 +53,16 @@ class TestPsana2TimestampIntegration:
     def test_get_data_returns_float64_array(self):
         """Psana2Timestamp.get_data() works with real events."""
         from lclstreamer.event_data_sources.psana2.data_sources import Psana2Timestamp
-        from lclstreamer.models.parameters import DataSourceParameters
+        from lclstreamer.models.parameters import Psana2TimestampParameters
 
-        params = DataSourceParameters(type="Psana2Timestamp")
-        ts = Psana2Timestamp(name="ts", parameters=params, additional_info={})
+        params = Psana2TimestampParameters(type="Psana2Timestamp")
+        name = "ts"
+        ts = Psana2Timestamp(name=name, parameters=params, additional_info={})
 
         ds = psana.DataSource(files=str(FIXTURE))
         for run in ds.runs():
             for event in run.events():
-                result = ts.get_data(event)
+                result = ts.get_data(event)[name]
                 assert isinstance(result, np.ndarray)
                 assert result.dtype == np.float64
                 break
@@ -75,23 +76,25 @@ class TestPsana2DetectorInterfaceIntegration:
         from lclstreamer.event_data_sources.psana2.data_sources import (
             Psana2DetectorInterface,
         )
-        from lclstreamer.models.parameters import DataSourceParameters
+        from lclstreamer.models.parameters import Psana2DetectorInterfaceParameters
 
         ds = psana.DataSource(files=str(FIXTURE))
         for run in ds.runs():
-            params = DataSourceParameters(
+            params = Psana2DetectorInterfaceParameters(
                 type="Psana2DetectorInterface",
                 psana_name="testdet",
                 psana_fields="raw.raw",
+                dtype="float64",
             )
+            name = "det"
             iface = Psana2DetectorInterface(
-                name="det",
+                name=name,
                 parameters=params,
                 additional_info={"run": run},
             )
 
             for event in run.events():
-                result = iface.get_data(event)
+                result = iface.get_data(event)[name]
                 assert result.shape == (32, 32)
                 assert result.dtype == np.float64  # default dtype conversion
                 break

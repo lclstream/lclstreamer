@@ -36,10 +36,8 @@ def test_reset_zeroes_count_and_count_resumes_from_one():
 def test_len_counts_dict_typed_events():
     storage = DataStorage()
     event = {
-        "detector": {
-            "image": numpy.zeros((2, 2), dtype=numpy.float32),
-            "mask": numpy.zeros((2, 2), dtype=numpy.float32),
-        }
+        "detector_image": numpy.zeros((2, 2), dtype=numpy.float32),
+        "detector_mask": numpy.zeros((2, 2), dtype=numpy.float32),
     }
     storage.add_data(event)
     storage.add_data(event)

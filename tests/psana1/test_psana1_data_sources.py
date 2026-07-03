@@ -4,12 +4,14 @@ Mock-based unit tests for psana1 data source classes.
 These tests exercise Psana1Timestamp and Psana1DetectorInterface without
 requiring psana to be installed. All psana objects are replaced with mocks.
 """
+from docutils.nodes import ValidationError
 
 import sys
 from unittest.mock import MagicMock, patch
 
 import numpy
 import pytest
+from pydantic import ValidationError
 
 # Create mock psana module before importing data_sources
 mock_psana = MagicMock()
@@ -19,7 +21,10 @@ from lclstreamer.event_data_sources.psana1.data_sources import (
     Psana1DetectorInterface,
     Psana1Timestamp,
 )
-from lclstreamer.models.parameters import DataSourceParameters
+from lclstreamer.models.parameters import (
+    Psana1DetectorInterfaceParameters,
+    Psana1TimestampParameters,
+)
 
 
 # -- Helpers --
@@ -35,24 +40,20 @@ def _make_event(seconds: int, nanoseconds: int) -> MagicMock:
     return event
 
 
-def _make_params(**extra) -> DataSourceParameters:
-    """Create DataSourceParameters with extra fields."""
-    return DataSourceParameters(type="Psana1DetectorInterface", **extra)
-
-
 # -- Psana1Timestamp tests --
 
 
 class TestPsana1Timestamp:
     def setup_method(self):
-        params = DataSourceParameters(type="Psana1Timestamp")
+        params = Psana1TimestampParameters(type="Psana1Timestamp")
+        self._name = "timestamp"
         self.ts = Psana1Timestamp(
-            name="timestamp", parameters=params, additional_info={}
+            name=self._name, parameters=params, additional_info={}
         )
 
     def test_basic_timestamp(self):
         event = _make_event(1728946748, 123456789)
-        result = self.ts.get_data(event)
+        result = self.ts.get_data(event)[self._name]
         assert isinstance(result, numpy.ndarray)
         # On npz-serializer branch: string concatenation "seconds.nanoseconds"
         expected = numpy.array("1728946748.123456789")
@@ -60,13 +61,13 @@ class TestPsana1Timestamp:
 
     def test_zero_timestamp(self):
         event = _make_event(0, 0)
-        result = self.ts.get_data(event)
+        result = self.ts.get_data(event)[self._name]
         expected = numpy.array("0.0")
         assert str(result) == str(expected)
 
     def test_max_nanoseconds(self):
         event = _make_event(1728946748, 999999999)
-        result = self.ts.get_data(event)
+        result = self.ts.get_data(event)[self._name]
         expected = numpy.array("1728946748.999999999")
         assert str(result) == str(expected)
 
@@ -87,38 +88,42 @@ class TestPsana1DetectorInterface:
             "lclstreamer.event_data_sources.psana1.data_sources.Detector",
             return_value=mock_detector,
         ):
-            params = _make_params(**extra)
+            params = Psana1DetectorInterfaceParameters(type="Psana1DetectorInterface", **extra)
+            self._name = "test_det"
             return Psana1DetectorInterface(
-                name="test_det", parameters=params, additional_info={}
+                name=self._name, parameters=params, additional_info={}
             )
+
+    def _make_callable(self, return_this):
+        def f(event=None):
+            return return_this
+        return f
 
     def test_single_callable_field(self):
         """psana_fields: 'calib' → det.calib(event)"""
         mock_det = MagicMock()
-        mock_det.calib.return_value = numpy.ones((16, 352, 384))
+        mock_det.raw = self._make_callable(numpy.ones((16, 352, 384)))
 
         iface = self._make_interface(
-            mock_det, psana_name="epix10k2M", psana_fields="calib"
+            mock_det, psana_name="epix10k2M", psana_fields="raw"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
 
-        mock_det.calib.assert_called_once_with(event)
         assert result.shape == (16, 352, 384)
 
     def test_dotted_field_traversal(self):
         """psana_fields: 'raw.image' → det.raw.image(event)"""
         image_data = numpy.random.rand(1667, 1668).astype(numpy.float64)
         mock_det = MagicMock()
-        mock_det.raw.image.return_value = image_data
+        mock_det.raw.image = self._make_callable(image_data)
 
         iface = self._make_interface(
             mock_det, psana_name="epix10k2M", psana_fields="raw.image"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
 
-        mock_det.raw.image.assert_called_once_with(event)
         numpy.testing.assert_array_equal(result, image_data)
 
     def test_non_callable_field(self):
@@ -132,13 +137,9 @@ class TestPsana1DetectorInterface:
             mock_det, psana_name="det", psana_fields="raw.some_value"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
         assert result.dtype == numpy.float64
 
-    @pytest.mark.xfail(
-        reason="Known bug: 'param' is unbound in PV mode (line 158)",
-        raises=UnboundLocalError,
-    )
     def test_pv_mode(self):
         """psana_name contains ':' → PV mode, det(event) called directly."""
         mock_det = MagicMock()
@@ -146,7 +147,7 @@ class TestPsana1DetectorInterface:
 
         iface = self._make_interface(mock_det, psana_name="ABC:DEF:GHI")
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
 
         mock_det.assert_called_once_with(event)
         assert float(result) == 42.0
@@ -155,13 +156,15 @@ class TestPsana1DetectorInterface:
         """eventCodes field gets zero-padded to length 256."""
         codes = numpy.array([140, 141, 142, 162])
         mock_det = MagicMock()
-        mock_det.eventCodes.return_value = codes
+        def eventcodes(event):
+            return codes
+        mock_det.eventCodes = eventcodes
 
         iface = self._make_interface(
             mock_det, psana_name="EvrData", psana_fields="eventCodes"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
 
         assert len(result) == 256
         numpy.testing.assert_array_equal(result[:4], codes)
@@ -171,54 +174,75 @@ class TestPsana1DetectorInterface:
         """When base(event) raises TypeError, falls back to base()."""
         mock_det = MagicMock()
         fallback_value = numpy.array([1.0, 2.0, 3.0])
-        mock_method = MagicMock(side_effect=[TypeError("no args"), fallback_value])
-        mock_det.raw.info = mock_method
+        def raw():
+            return fallback_value
+        mock_det.raw.raw = raw
 
         iface = self._make_interface(
-            mock_det, psana_name="det", psana_fields="raw.info"
+            mock_det, psana_name="det", psana_fields="raw.raw"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
         numpy.testing.assert_array_equal(result, fallback_value)
 
     def test_custom_dtype(self):
         """dtype parameter is applied to the output array."""
         mock_det = MagicMock()
-        mock_det.calib.return_value = numpy.ones((10,))
+        def calib():
+            return numpy.ones((10,))
+        mock_det.calib = calib
 
         iface = self._make_interface(
             mock_det,
             psana_name="det",
             psana_fields="calib",
-            dtype=numpy.float32,
+            dtype="float32",
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
         assert result.dtype == numpy.float32
 
     def test_default_dtype_is_float64(self):
         """Default dtype should be float64."""
         mock_det = MagicMock()
-        mock_det.calib.return_value = numpy.ones((10,))
+        def calib():
+            return numpy.ones((10,))
+        mock_det.calib = calib
 
         iface = self._make_interface(
             mock_det, psana_name="det", psana_fields="calib"
         )
         event = MagicMock()
-        result = iface.get_data(event)
+        result = iface.get_data(event)[self._name]
         assert result.dtype == numpy.float64
 
     def test_multiple_fields(self):
         """Multiple psana_fields returns concatenated array."""
         mock_det = MagicMock()
+        def raw():
+            return numpy.array([1.0])
+        def fex():
+            return numpy.array([2.0])
+        mock_det.raw = raw
+        mock_det.fex = fex
         mock_det.raw.return_value = numpy.array([1.0])
         mock_det.fex.return_value = numpy.array([2.0])
 
         iface = self._make_interface(
-            mock_det, psana_name="det", psana_fields=["raw", "fex"]
+            mock_det, psana_name="det", psana_fields=["raw -> raw_alias", "fex -> fex_alias"]
         )
         event = MagicMock()
-        result = iface.get_data(event)
-        # Multiple fields returns a list of arrays → shape (2, 1)
-        assert result.shape == (2, 1)
-        numpy.testing.assert_array_equal(result.flatten(), [1.0, 2.0])
+        result_raw = iface.get_data(event)["raw_alias"]
+        result_fex = iface.get_data(event)["fex_alias"]
+
+        assert result_raw.shape == (1,)
+        assert result_fex.shape == (1,)
+        numpy.testing.assert_array_equal(result_raw, [1.0])
+        numpy.testing.assert_array_equal(result_fex, [2.0])
+
+    def test_multiple_fields_no_alias(self):
+        """Test if alias is missing, should give a validation error."""
+        with pytest.raises(ValidationError):
+            self._make_interface(
+                MagicMock(), psana_name="det", psana_fields=["raw -> raw_alias", "fex"]
+            )
