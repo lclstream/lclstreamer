@@ -15,22 +15,22 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.72.1
+          pixi-version: v0.71.2
           cache: true
 
       - name: Run psana1 tests
-        run: pixi run --environment psana1 tests/psana1 -v
+        run: pixi run --environment psana1 pytest tests/psana1 -v
 
   test-psana2:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.54.1
+          pixi-version: v0.71.2
           environments: psana2
           cache: true
 
       - name: Run psana2 tests
-        run: pixi run --environment psana2 tests/psana2 -v
+        run: pixi run --environment psana2 pytest tests/psana2 -v

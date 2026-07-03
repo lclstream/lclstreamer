@@ -12,7 +12,7 @@ test_path = Path("/sdf/data/lcls/ds/mfx/mfx100852324/xtc/smalldata/")
 try:
     test_path.stat()
     can_access = True
-except PermissionError:
+except (PermissionError, FileNotFoundError):
     can_access = False
 
 psana_found: bool = find_spec("psana") is not None
