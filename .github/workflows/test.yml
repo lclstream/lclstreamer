@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-mock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.54.1
+          cache: true
+
+      - name: Run psana1 tests
+        run: pixi run --environment psana1 tests/psana1 -v
+
+  test-psana2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.54.1
+          environments: psana2
+          cache: true
+
+      - name: Run psana2 tests
+        run: pixi run --environment psana2 tests/psana2 -v
