@@ -1,13 +1,14 @@
-name: Unit Tests
+name: Tests
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main, npz-serializer]
+    branches: [main]
   pull_request:
-    branches: [main, npz-serializer]
+    branches: [main]
 
 jobs:
-  test:
+  test-mock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,6 +16,21 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
           pixi-version: v0.54.1
+          cache: true
 
-      - name: Run mock-based unit tests
-        run: pixi run pytest tests/test_psana1_data_sources.py tests/test_psana2_data_sources.py -v
+      - name: Run psana1 tests
+        run: pixi run --environment psana1 tests/psana1 -v
+
+  test-psana2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.54.1
+          environments: psana2
+          cache: true
+
+      - name: Run psana2 tests
+        run: pixi run --environment psana2 tests/psana2 -v

@@ -6,7 +6,7 @@ import numpy
 import pytest
 from numpy.typing import NDArray
 
-from lclstreamer.models.parameters import DataSourceParameters
+from lclstreamer.models.parameters import DataSourceParameters, Psana2DetectorInterfaceParameters
 
 test_path = Path("/sdf/data/lcls/ds/mfx/mfx100852324/xtc/smalldata/")
 try:
@@ -36,13 +36,9 @@ if psana_found:
 @pytest.mark.skipif(not can_access, reason="Inaccessible data")
 def test_detector_interface() -> None:
 
-    print("DEBUG: Here", flush=True)
-
     from lclstreamer.event_data_sources.psana2.data_sources import (
         Psana2DetectorInterface,
     )
-
-    parameters: DataSourceParameters = DataSourceParameters(type="Detector_data")
 
     # Psana2AreaDetector
     exp: str = "mfx100852324"
@@ -61,11 +57,11 @@ def test_detector_interface() -> None:
     )
     event: Any = next(event_source)
     name: str = "Psana2AreaDetector"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "jungfrau",
-        "psana_fields": "raw.raw",
-    }
+    parameters: Psana2DetectorInterfaceParameters = Psana2DetectorInterfaceParameters(
+                                                        type="Psana2DetectorInterface",
+                                                        psana_name="jungfrau",
+                                                        psana_fields="raw.raw",
+                                                    )
     Psana2AreaDetector: Psana2DetectorInterface = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -75,7 +71,7 @@ def test_detector_interface() -> None:
         },
     )
     Psana2AreaDetector_func: NDArray[numpy.signedinteger[Any]] = (
-        Psana2AreaDetector.get_data(event)
+        Psana2AreaDetector.get_data(event)["jungfrau.raw.raw"]
     )
     Psana2AreaDetector_raw: NDArray[numpy.signedinteger[Any]] = cast(
         NDArray[numpy.signedinteger[Any]],
@@ -83,13 +79,37 @@ def test_detector_interface() -> None:
     )
     assert numpy.array_equal(Psana2AreaDetector_func, Psana2AreaDetector_raw)
 
+    # Psana 2 Calib
+    name = "Psana2Calib"
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="jungfrau",
+                                                   psana_fields="raw.calib",
+                                                  )
+    Psana2Calib = Psana2DetectorInterface(
+        name=name,
+        parameters=parameters,
+        additional_info={
+            "run": psana_run,
+            "source_identifier": source_identifier,
+        },
+    )
+    Psana2Calib_func: NDArray[numpy.floating[Any]] = (
+        Psana2Calib.get_data(event)["jungfrau.raw.calib"]
+    )
+    Psana2Calib_raw: NDArray[numpy.floating[Any]] = (  # pyright: ignore[reportUnknownVariableType]
+        psana_run.Detector("jungfrau").raw.calib(event)  # pyright: ignore[reportUnknownMemberType]
+    )
+    assert numpy.array_equal(
+        Psana2Calib_func,
+        Psana2Calib_raw,  # pyright: ignore[reportUnknownArgumentType]
+    )
+
     # Psana2AssembledAreaDetector
     name = "Psana2AssembledAreaDetector"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "jungfrau",
-        "psana_fields": "raw.image",
-    }
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="jungfrau",
+                                                   psana_fields="raw.image",
+                                                  )
     Psana2AssembledAreaDetector = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -99,7 +119,7 @@ def test_detector_interface() -> None:
         },
     )
     Psana2AssembledAreaDetector_func: NDArray[numpy.floating[Any]] = (
-        Psana2AssembledAreaDetector.get_data(event)
+        Psana2AssembledAreaDetector.get_data(event)["jungfrau.raw.image"]
     )
     Psana2AssembledAreaDetector_raw: NDArray[numpy.floating[Any]] = (  # pyright: ignore[reportUnknownVariableType]
         psana_run.Detector("jungfrau").raw.image(event)  # pyright: ignore[reportUnknownMemberType]
@@ -111,10 +131,9 @@ def test_detector_interface() -> None:
 
     # Psana2PV
     name = "Psana2PV"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "SIOC:SYS0:ML00:AO192",
-    }
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="SIOC:SYS0:ML00:AO192",
+                                                  )
     Psana2PV = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -123,7 +142,7 @@ def test_detector_interface() -> None:
             "source_identifier": source_identifier,
         },
     )
-    Psana2PV_func: NDArray[numpy.floating[Any]] = Psana2PV.get_data(event)
+    Psana2PV_func: NDArray[numpy.floating[Any]] = Psana2PV.get_data(event)["SIOC:SYS0:ML00:AO192"]
     Psana2PV_raw: NDArray[numpy.floating[Any]] = cast(  # pyright: ignore[reportUnknownVariableType]
         NDArray[numpy.floating[Any]],
         psana_run.Detector("SIOC:SYS0:ML00:AO192")(event),  # pyright: ignore[reportUnknownMemberType]
@@ -135,11 +154,10 @@ def test_detector_interface() -> None:
 
     # Psana2EBeam
     name = "Psana2EBeam"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "ebeamh",
-        "psana_fields": "raw.ebeamL3Energy",
-    }
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="ebeamh",
+                                                   psana_fields="raw.ebeamL3Energy",
+                                                  )
     Psana2EBeam = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -148,7 +166,7 @@ def test_detector_interface() -> None:
             "source_identifier": source_identifier,
         },
     )
-    Psana2EBeam_func: NDArray[numpy.floating[Any]] = Psana2EBeam.get_data(event)
+    Psana2EBeam_func: NDArray[numpy.floating[Any]] = Psana2EBeam.get_data(event)["ebeamh.raw.ebeamL3Energy"]
     Psana2EBeam_raw: NDArray[numpy.floating[Any]] = (  # pyright: ignore[reportUnknownVariableType]
         psana_run.Detector("ebeamh").raw.ebeamL3Energy(event)  # pyright: ignore[reportUnknownMemberType]
     )
@@ -176,11 +194,10 @@ def test_detector_interface() -> None:
     )
     event = next(event_source)
     name = "Psana2Gmd"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "gmd",
-        "psana_fields": "raw.milliJoulesPerPulse",
-    }
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="gmd",
+                                                   psana_fields="raw.milliJoulesPerPulse",
+                                                  )
     Psana2Gmd = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -189,7 +206,7 @@ def test_detector_interface() -> None:
             "source_identifier": source_identifier,
         },
     )
-    Psana2Gmd_func: NDArray[numpy.floating[Any]] = Psana2Gmd.get_data(event)
+    Psana2Gmd_func: NDArray[numpy.floating[Any]] = Psana2Gmd.get_data(event)["gmd.raw.milliJoulesPerPulse"]
     Psana2Gmd_raw: NDArray[numpy.floating[Any]] = (  # pyright: ignore[reportUnknownVariableType]
         psana_run.Detector("gmd").raw.milliJoulesPerPulse(event)  # pyright: ignore[reportUnknownMemberType]
     )
@@ -200,11 +217,10 @@ def test_detector_interface() -> None:
 
     # Psana2Camera
     name = "Psana2Camera"
-    parameters.__pydantic_extra__ = {
-        "type": "Psana2DetectorInterface",
-        "psana_name": "tmo_fzppiranha",
-        "psana_fields": "raw.raw",
-    }
+    parameters = Psana2DetectorInterfaceParameters(type="Psana2DetectorInterface",
+                                                   psana_name="tmo_fzppiranha",
+                                                   psana_fields="raw.raw",
+                                                  )
     Psana2Camera = Psana2DetectorInterface(
         name=name,
         parameters=parameters,
@@ -213,7 +229,7 @@ def test_detector_interface() -> None:
             "source_identifier": source_identifier,
         },
     )
-    Psana2Camera_func: NDArray[numpy.floating[Any]] = Psana2Camera.get_data(event)
+    Psana2Camera_func: NDArray[numpy.floating[Any]] = Psana2Camera.get_data(event)["tmo_fzppiranha.raw.raw"]
     Psana2Camera_raw: NDArray[numpy.floating[Any]] = (  # pyright: ignore[reportUnknownVariableType]
         psana_run.Detector("tmo_fzppiranha").raw.raw(event)  # pyright: ignore[reportUnknownMemberType]
     )
