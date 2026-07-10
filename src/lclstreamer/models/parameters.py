@@ -392,7 +392,7 @@ class BinaryFileWritingDataHandlerParameters(_CustomBaseModel):
     type: Literal["BinaryFileWritingDataHandler"]
     file_prefix: str = ""
     file_suffix: str = "h5"
-    write_directory: Path = Path.cwd()
+    write_directory: Path = Field(default_factory=Path.cwd)
 
 
 DataHandlerParameters = Annotated[
