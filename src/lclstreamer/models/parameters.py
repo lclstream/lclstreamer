@@ -132,6 +132,7 @@ class _PsanaDetectorInterfaceParameters(_CustomBaseModel):
 
 class Psana1DetectorInterfaceParameters(_PsanaDetectorInterfaceParameters):
     type: Literal["Psana1DetectorInterface"]
+    dtype: str | None = None
 
 class Psana2DetectorInterfaceParameters(_PsanaDetectorInterfaceParameters):
     type: Literal["Psana2DetectorInterface"]
@@ -359,8 +360,8 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
 
     type: Literal["BinaryDataStreamingDataHandler"]
     urls: List[str]
-    distribute: bool
-    buffer: int
+    distribute: bool = False
+    buffer: int = 0
     role: Literal["server", "client"] = "client"
     library: Literal["zmq"] = "zmq"
     socket_type: Literal["push"] = "push"
