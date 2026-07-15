@@ -56,7 +56,7 @@ data_serializer:
     # real photon_wavelength PV when their sources are configured below.
     type: SimplonBinarySerializer
     data_source_to_serialize: jungfrau.raw.calib
-    polarization_fraction: 0
+    polarization_fraction: 0.999
     polarization_axis: [1.0, 0.0, 0.0]
     data_collection_rate: "120Hz"
     detector_name: "jungfrau"

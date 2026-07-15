@@ -53,7 +53,7 @@ processing_pipeline:
 data_serializer:
     type: SimplonBinarySerializer
     data_source_to_serialize: "{{ areadetector_name }}.{{ areadetector_field }}"
-    polarization_fraction: {{ polarization_fraction }} # e.g. 0
+    polarization_fraction: {{ polarization_fraction }} # e.g. 0.999
     polarization_axis: {{ polarization_axis }} # e.g. [1.0, 0.0, 0.0]
     data_collection_rate: "{{ collection_rate }}"  # e.g. "120Hz"
     detector_name: "{{ areadetector_name }}"  # "jungfrau"
