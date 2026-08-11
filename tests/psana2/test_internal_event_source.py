@@ -1,13 +1,14 @@
 import traceback
 from pathlib import Path
 
-from click.testing import Result
+from click.testing import Result, CliRunner as ClickCliRunner
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from lclstreamer.cmd.lclstreamer import app
 
 runner: CliRunner = CliRunner()
+click_runner: ClickCliRunner = ClickCliRunner()
 
 configuration: str = """
 source_identifier: ""
@@ -75,7 +76,7 @@ data_handlers:
 
 
 def test_app() -> None:
-    with runner.isolated_filesystem():
+    with click_runner.isolated_filesystem():
         current_directory: Path = Path.cwd()
         Path(current_directory / "output").mkdir()
         configuration_file_name: Path = current_directory / "lclstreamer.yaml"
@@ -92,7 +93,7 @@ def test_app() -> None:
 
 
 def test_parse_error() -> None:
-    with runner.isolated_filesystem():
+    with click_runner.isolated_filesystem():
         current_directory: Path = Path.cwd()
         Path(current_directory / "output").mkdir()
         configuration_file_name: Path = current_directory / "lclstreamer.yaml"
