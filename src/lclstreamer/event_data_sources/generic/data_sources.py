@@ -286,13 +286,13 @@ class BaseDetectorInterface(DataSourceProtocol):
         return data_caller
 
     def _get_callable_with_event(self, name, base, event):
-        return (name, numpy.asarray(base(event), dtype=self.dtype))
+        return (name, base(event))
 
     def _get_callable_with_noevent(self, name, base, event):
-        return (name, numpy.asarray(base(), dtype=self.dtype))
+        return (name, base())
 
     def _get_noncallable(self, name, base, event):
-        return (name, numpy.asarray(base, dtype=self.dtype))
+        return (name, base)
 
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")
@@ -313,15 +313,20 @@ class BaseDetectorInterface(DataSourceProtocol):
         name: str
         base: Any
         data_caller: Any
-        data = Any
 
         for name, base, data_caller in self._call_get_data:
-            name, data = data_caller(name, base, event)
-            if isinstance(data, dict):
+            # Fetch the raw per-field value. psana returns None when a field's data is
+            # missing/damaged this event; store it as None (rather than asarray-ing it)
+            # so a missing optional field is omitted downstream and a missing primary
+            # frame can be dropped before batching.
+            name, raw = data_caller(name, base, event)
+            if isinstance(raw, dict):
                 log_error_and_exit(
                     f"Data for the psana data source {self._name} has "
                     "the format of a dictionary! HSD detectors are not supported yet."
                 )
-            data_dict[name] = data
+            data_dict[name] = (
+                None if raw is None else numpy.asarray(raw, dtype=self.dtype)
+            )
 
         return data_dict
