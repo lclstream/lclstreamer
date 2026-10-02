@@ -1,6 +1,6 @@
 source_identifier: exp=mfx100852324,run=51
 
-skip_incomplete_events: True
+skip_incomplete_events: False
 
 data_sources:
     timestamp:
