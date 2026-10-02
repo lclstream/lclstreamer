@@ -89,22 +89,16 @@ class CrystfelPreprocessingPipeline(ProcessingPipelineProtocol):
 
         data: dict[str, StrFloatIntNDArray | None]
         for data in stream:
-            detector_data_shape: tuple[int, ...] = data["detector_data"][
-                "jungfrau.raw.calib"
-            ].shape
-            preprocessed_data["detector_data"] = data["detector_data"][
-                "jungfrau.raw.calib"
-            ].reshape(
+            detector_data_shape: tuple[int, ...] = data["detector_data"]["detector_data"].shape
+            preprocessed_data["detector_data"] = data["detector_data"]["detector_data"].reshape(
                 detector_data_shape[0] * detector_data_shape[1],
                 *detector_data_shape[2:],
             )
             preprocessed_data["peak_list"] = empty_peak_list
             preprocessed_data["beam_energy"]: float = (h / joules_per_ev * c) / (
-                data["photon_wavelength"]["SIOC:SYS0:ML00:AO192"].item() * 1e-9
+                data["photon_wavelength"]["photon_wavelength"].item() * 1e-9
             )
-            preprocessed_data["detector_distance"] = data["detector_distance"][
-                "MFX:DET:MMS:04.RBV"
-            ].item()
+            preprocessed_data["detector_distance"] = data["detector_distance"]["detector_distance"].item()
             preprocessed_data["event_id"] = data["timestamp"].astype(numpy.int64).item()
             preprocessed_data["timestamp"] = (
                 data["timestamp"].astype(numpy.int64).item()
