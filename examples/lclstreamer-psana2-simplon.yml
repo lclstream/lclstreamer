@@ -37,7 +37,7 @@ data_sources:
                 "raw.ebeamUndAngY", # Angle Y
                 "raw.ebeamUndPosX", # Pos X
                 "raw.ebeamUndPosY", # Pos Y
-                "raw.ebeamL3Energy", # Beam energy
+                "raw.ebeamPhotonEnergy", # Photon energy
             ]
 
     run_info:

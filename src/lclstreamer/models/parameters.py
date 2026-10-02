@@ -310,6 +310,12 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
         detector_name: Human-readable name of the detector
 
         detector_type: Model or type string identifying the detector hardware
+
+        photon_wavelength_source: Optional data key of the photon wavelength PV (in
+            nm). When unset, photon_wavelength is 0
+
+        spectrometer_source: Optional data key of a spectrometer array to include in
+            each image message
     """
 
     type: Literal["SimplonBinarySerializer"]
@@ -319,6 +325,8 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
     data_collection_rate: str
     detector_name: str
     detector_type: str
+    photon_wavelength_source: str | None = None
+    spectrometer_source: str | None = None
 
 
 class HDF5BinarySerializerParameters(_CustomBaseModel):
