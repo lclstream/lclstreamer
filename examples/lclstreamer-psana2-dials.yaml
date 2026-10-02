@@ -67,6 +67,7 @@ data_handlers:
           - "tcp://127.0.0.1:12321"
       distribute: False
       buffer: 0
+      linger: -1
       role: client
       library: zmq
       socket_type: push
