@@ -1,0 +1,73 @@
+source_identifier: exp=mfx100852324,run=51
+
+skip_incomplete_events: False
+
+data_sources:
+    timestamp:
+        type: Psana2Timestamp
+
+    detector_data:
+        type: Psana2DetectorInterface
+        psana_name: jungfrau
+        psana_fields: raw.calib # Use raw.calib for calibrated data
+
+    photon_wavelength:
+        type: Psana2DetectorInterface
+        psana_name: "SIOC:SYS0:ML00:AO192"
+
+    spectrometer:
+        type: Psana2DetectorInterface
+        psana_name: feespec
+        psana_fields: raw.hproj
+
+    detector_geometry:
+        type: Psana2DetectorInterface
+        psana_name: "jungfrau"
+        psana_fields: [
+                "_detid -> jungfrau._detid", # Detector ID
+                "raw._det_geotxt_default -> jungfrau.raw._det_geotxt_default", # Geometry data
+            ]
+        dtype: str
+
+    beam_data: # Optional
+        type: Psana2DetectorInterface
+        psana_name: "ebeamh"
+        psana_fields: [
+                "raw.ebeamUndAngX -> ebeamh.raw.ebeamUndAngX", # Angle X
+                "raw.ebeamUndAngY -> ebeamh.raw.ebeamUndAngY", # Angle Y
+                "raw.ebeamUndPosX -> ebeamh.raw.ebeamUndPosX", # Pos X
+                "raw.ebeamUndPosY -> ebeamh.raw.ebeamUndPosY", # Pos Y
+                "raw.ebeamPhotonEnergy -> ebeamh.raw.ebeamPhotonEnergy", # Photon energy
+            ]
+
+    run_info:
+        type: Psana2RunInfo
+
+event_source:
+    type: Psana2EventSource
+
+processing_pipeline:
+    type: BatchProcessingPipeline
+    batch_size: 1
+
+data_serializer:
+    type: SimplonBinarySerializer
+    data_source_to_serialize: detector_data
+    polarization_fraction: 0.999
+    polarization_axis: [1.0, 0.0, 0.0]
+    data_collection_rate: "120Hz"
+    detector_name: "jungfrau"
+    detector_type: "AreaDetector"
+    spectrometer_source: spectrometer
+    photon_wavelength_source: photon_wavelength
+
+data_handlers:
+    - type: BinaryDataStreamingDataHandler
+      urls:
+          - "tcp://127.0.0.1:12321"
+      distribute: False
+      buffer: 0
+      linger: -1
+      role: client
+      library: zmq
+      socket_type: push
