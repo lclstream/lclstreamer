@@ -126,6 +126,10 @@ class SimplonBinarySerializer(DataSerializerProtocol):
                     "the data"
                 )
 
+            if self._is_missing(array):
+                log_info(f"Skipping event missing {self._data_source_to_serialize}")
+                continue
+
             if not (
                 numpy.issubdtype(array.dtype, numpy.integer)
                 or numpy.issubdtype(array.dtype, numpy.floating)
