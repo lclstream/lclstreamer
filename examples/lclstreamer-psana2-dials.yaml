@@ -1,5 +1,6 @@
-source_identifier: "{{ source_identifier }}"
-skip_incomplete_events: True
+source_identifier: exp=mfx100852324,run=51
+
+skip_incomplete_events: False
 
 data_sources:
     timestamp:
@@ -7,31 +8,30 @@ data_sources:
 
     detector_data:
         type: Psana2DetectorInterface
-        psana_name: "{{ areadetector_name }}" # jungfrau
-        psana_fields: "{{ areadetector_field }}" # Use raw.calib for calibrated data
-
-        #    assembled_detector_data:
-        #        type: Psana2DetectorInterface
-        #        psana_name: jungfrau
-        #        psana_fields: raw.image
+        psana_name: jungfrau
+        psana_fields: raw.calib # Use raw.calib for calibrated data
 
     photon_wavelength:
         type: Psana2DetectorInterface
-        psana_name: "{{ photon_wavelength_pv }}" # "SIOC:SYS0:ML00:AO192"
+        psana_name: "SIOC:SYS0:ML00:AO192"
+
+    spectrometer:
+        type: Psana2DetectorInterface
+        psana_name: feespec
+        psana_fields: raw.hproj
 
     detector_geometry:
         type: Psana2DetectorInterface
-        psana_name: "{{ areadetector_name }}" # "jungfrau"
+        psana_name: "jungfrau"
         psana_fields: [
                 "_detid -> jungfrau._detid", # Detector ID
                 "raw._det_geotxt_default -> jungfrau.raw._det_geotxt_default", # Geometry data
-                #"raw._pixel_coords", # Pixel coords
             ]
         dtype: str
 
     beam_data: # Optional
         type: Psana2DetectorInterface
-        psana_name: "{{ ebeam_detector }}" # ebeamh
+        psana_name: "ebeamh"
         psana_fields: [
                 "raw.ebeamUndAngX -> ebeamh.raw.ebeamUndAngX", # Angle X
                 "raw.ebeamUndAngY -> ebeamh.raw.ebeamUndAngY", # Angle Y
@@ -48,23 +48,26 @@ event_source:
 
 processing_pipeline:
     type: BatchProcessingPipeline
-    batch_size: {{ batch_size }} # 1
+    batch_size: 1
 
 data_serializer:
     type: SimplonBinarySerializer
     data_source_to_serialize: detector_data
-    polarization_fraction: {{ polarization_fraction }} # e.g. 0
-    polarization_axis: {{ polarization_axis }} # e.g. [1.0, 0.0, 0.0]
-    data_collection_rate: "{{ collection_rate }}"  # e.g. "120Hz"
-    detector_name: "{{ areadetector_name }}"  # "jungfrau"
+    polarization_fraction: 0.999
+    polarization_axis: [1.0, 0.0, 0.0]
+    data_collection_rate: "120Hz"
+    detector_name: "jungfrau"
     detector_type: "AreaDetector"
+    spectrometer_source: spectrometer
+    photon_wavelength_source: photon_wavelength
 
 data_handlers:
     - type: BinaryDataStreamingDataHandler
       urls:
-          - "{{ out_url }}"  # "tcp://sdfdtn002:5001"
+          - "tcp://127.0.0.1:12321"
       distribute: False
       buffer: 0
+      linger: -1
       role: client
       library: zmq
       socket_type: push

@@ -70,8 +70,8 @@ class BinaryStreamingPushDataHandlerZmq:
         # Set buffer size
         if data_handler_parameters.buffer > 0:
             self._socket.setsockopt(SNDBUF, data_handler_parameters.buffer)
-        # Set linger to 0 so socket closes immediately without waiting
-        self._socket.setsockopt(LINGER, 0)
+        # Time in ms that close() waits to flush queued messages (-1: no limit)
+        self._socket.setsockopt(LINGER, data_handler_parameters.linger)
         # Queue 5 messages if there is no receiver
         self._socket.setsockopt(SNDHWM, 5)
 
@@ -122,7 +122,7 @@ class BinaryStreamingPushDataHandlerZmq:
     def close(self) -> None:
         """Explicitly close the socket and context with timeout"""
         try:
-            self._socket.close(linger=0)
+            self._socket.close()
             self._context.term()
         except Exception:
             pass

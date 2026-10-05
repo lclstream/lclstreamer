@@ -42,22 +42,30 @@ This Data Serializer class turns the data accumulated by LCLStreamer into a bina
 with the internal structure of a Simplon message. It follows version 1.8 of the Simplon
 specification published by Dectris.
 
-Each call to the serializer produces a Simplon image message (`m`-type) containing the
-compressed detector frame for the latest event in the batch. When the last LCLStream
-worker processes the first batch, it additionally emits a Simplon start message
-(`c`-type) with run and detector metadata. At the end of the stream, the last worker
-emits a Simplon stop message (`c`-type).
+Each call to the serializer produces a Simplon image message containing the detector
+frame for the latest event in the batch. When the last LCLStream worker processes the
+first batch, it additionally emits a Simplon start message with run and detector
+metadata. At the end of the stream, the last worker emits a Simplon end
+message. Each message is a CBOR-encoded dictionary whose `type` entry is `start`,
+`image` or `end`, and which identifies the run with `run_id`.
 
-The serializer uses bitshuffle + LZ4 compression for the detector frame data.
+The detector frame and spectrum are sent uncompressed.
 
 * The following data sources must be present in the `data_sources` section of the
   configuration file when using this serializer: `timestamp`, `detector_data`,
   `detector_geometry`, and `run_info`.
 
+* The serializer reads the detector ID and geometry from the `jungfrau._detid` and
+  `jungfrau.raw._det_geotxt_default` data keys, and the beam data from
+  `ebeamh.raw.ebeamUndAngX`, `ebeamh.raw.ebeamUndAngY`, `ebeamh.raw.ebeamUndPosX`,
+  `ebeamh.raw.ebeamUndPosY` and `ebeamh.raw.ebeamPhotonEnergy`. Use `->` aliases in
+  `psana_fields` to give the fields these names (see
+  `examples/lclstreamer-psana2-simplon.yml`). The beam data is optional.
+
 ### *Configuration Parameters for SimplonBinarySerializer*
 
 * `data_source_to_serialize` (str): The name of the data source whose array is 
-  compressed and embedded in each Simplon `m`-type message . This name must correspond
+  embedded in each Simplon image message. This name must correspond
   to a key defined in the `data_sources` section of the configuration file.
   Example: `detector_data`
 
@@ -74,9 +82,20 @@ The serializer uses bitshuffle + LZ4 compression for the detector frame data.
   Example: `120 Hz`
 
 * `detector_name` (str): A human-readable name identifying the main detector that
-  generates the data encoded in the Simplon `m`-type messages. This value is included
+  generates the data encoded in the Simplon image messages. This value is included
   in the Simplon start message. Example: `Jungfrau 1M`
 
 * `detector_type` (str): A string identifying the model or type of the main detector
-  that generates the data encoded in the Simplon `m`-type messages. This value is
+  that generates the data encoded in the Simplon image messages. This value is
   included in the Simplon start message. Example: `Jungfrau 1M`
+
+* `photon_wavelength_source` (str): This parameter is optional. The data key of the
+  photon wavelength PV, reported in nm. Its value is sent in Angstrom as
+  `photon_wavelength` in each image message, or 0 when the reading is missing. When the
+  parameter is not set, `photon_wavelength` is 0 and is sent only with the beam data.
+  Example: `photon_wavelength`
+
+* `spectrometer_source` (str): This parameter is optional. The data key of a spectrometer
+  array, sent in each image message as `spectrometer_data`, with `spectrometer_dtype`
+  and `spectrometer_shape`.
+  It is left out of an event whose reading is missing. Example: `spectrometer`

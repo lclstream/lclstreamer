@@ -72,3 +72,7 @@ silently dropping data.
 
 * `buffer` (int): Buffer size for the ZMQ socket can be set via this parameter. To use the
   OS default buffer size the value should be left as 0.
+
+* `linger` (int): This parameter is optional. The time in milliseconds that closing the
+  socket waits to send messages still queued. 0 discards them and -1 waits without
+  limit. The default value of this parameter is `0`. Example: `-1`

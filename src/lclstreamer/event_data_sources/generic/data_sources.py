@@ -289,13 +289,13 @@ class BaseDetectorInterface(DataSourceProtocol):
         return data_caller
 
     def _get_callable_with_event(self, name, base, event):
-        return (name, numpy.asarray(base(event), dtype=self.dtype))
+        return (name, base(event))
 
     def _get_callable_with_noevent(self, name, base, event):
-        return (name, numpy.asarray(base(), dtype=self.dtype))
+        return (name, base())
 
     def _get_noncallable(self, name, base, event):
-        return (name, numpy.asarray(base, dtype=self.dtype))
+        return (name, base)
 
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")
@@ -325,6 +325,9 @@ class BaseDetectorInterface(DataSourceProtocol):
                     f"Data for the psana data source {self._name} has "
                     "the format of a dictionary! HSD detectors are not supported yet."
                 )
-            data_dict[name] = data
+            # psana returns None for a missing reading: keep it None, not a 0-d NaN
+            data_dict[name] = (
+                None if data is None else numpy.asarray(data, dtype=self.dtype)
+            )
 
         return data_dict
