@@ -33,7 +33,7 @@ class Psana1Timestamp(DataSourceProtocol):
         del additional_info
         self._name = name
 
-    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.float64]]:
         """
         Retrieves timestamp information from a psana1 event
 

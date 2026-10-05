@@ -154,7 +154,9 @@ class Psana2EventSource(EventSourceProtocol):
             data: StrFloatIntNDArray | None
             data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
+
             for data_source_name in self._data_sources:
+                name: str
                 try:
                     name, data = self._data_sources[
                         data_source_name

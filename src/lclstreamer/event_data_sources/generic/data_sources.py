@@ -49,8 +49,9 @@ class ConstValue(DataSourceProtocol):
                     f"for data source {name}."
                 )
         self._data_dict: dict[str, NDArray[numpy.number]] = {name: cast_value}
+        self._name = name
 
-    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
         """
         Retrieves the constant float or int value defined in the configuration file as an 1d array
 
@@ -63,7 +64,7 @@ class ConstValue(DataSourceProtocol):
             An 1d array storing the value defined by the data source
             configuration parameters.
         """
-        return self._data_dict
+        return self._name, self._data_dict
 
 class GenericRandomNumpyArray(DataSourceProtocol):
     """
@@ -138,7 +139,7 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             )
 
 
-    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
         """
         Retrieves an array of int of float random numbers
 
@@ -151,12 +152,12 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             A dictionary of random numbers as requested by the user.
         """
         del event
-        data_dict: dict[str, Any] = {}
+        data: Any
         if self._always_random:
-            data_dict[self._name] = self._gen_data(self._array_dtype, self._array_shape)
+            data = self._gen_data(self._array_dtype, self._array_shape)
         else:
-            data_dict[self._name] = self._array
-        return data_dict
+            data = self._array
+        return self._name, data
 
 
 class SourceIdentifier(DataSourceProtocol):
@@ -189,7 +190,7 @@ class SourceIdentifier(DataSourceProtocol):
             additional_info["source_identifier"]
         )
 
-    def get_data(self, event: Any) -> NDArray[numpy.str_]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.str_]]:
         """
         Retrieves the source identifier as a numpy string array.
 
@@ -202,7 +203,7 @@ class SourceIdentifier(DataSourceProtocol):
             source_identifier: A 0-dimensional numpy string array containing the
                 source identifier defined at initialization
         """
-        return name, self._source_identifier
+        return self._name, self._source_identifier
 
 class BaseDetectorInterface(DataSourceProtocol):
     def __init__(
@@ -300,7 +301,7 @@ class BaseDetectorInterface(DataSourceProtocol):
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")
 
-    def get_data(self, event: Any) -> dict[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
         """
         Retrieves Detector values from a psana event
 
@@ -312,13 +313,13 @@ class BaseDetectorInterface(DataSourceProtocol):
 
             value: The retrieved data in the format of a numpy array
         """
-        name: str
         base: Any
         data_caller: Any
         data = Any
 
-        for name, base, data_caller in self._call_get_data:
-            name, data = data_caller(name, base, event)
+        for alias, base, data_caller in self._call_get_data:
+            name: str
+            name, data = data_caller(alias, base, event)
             if isinstance(data, dict):
                 log_error_and_exit(
                     f"Data for the psana data source {self._name} has "

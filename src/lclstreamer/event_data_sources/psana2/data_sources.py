@@ -30,7 +30,7 @@ class Psana2Timestamp(DataSourceProtocol):
         """
         self._name = name
 
-    def get_data(self, event: Any) -> NDArray[numpy.float64]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.float64]]:
         """
         Retrieves timestamp information from a psana2 event
 
@@ -105,7 +105,7 @@ class Psana2RunInfo(DataSourceProtocol):
         }
         self._name = name
 
-    def get_data(self, event: Any) -> dict[str, NDArray[numpy.str_]]:
+    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.str_]]:
         """
         Retrieves the detector info from a psana2 event
 
