@@ -84,7 +84,7 @@ class InternalEventSource(EventSourceProtocol):
             data: A dictionary storing data for an event
         """
         for i in range(self.number_of_events_to_generate):
-            data: StrFloatIntNDArray | None
+            data: StrFloatIntNDArray | dict[str, str] | None
             data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
 
@@ -97,5 +97,9 @@ class InternalEventSource(EventSourceProtocol):
                 except (TypeError, AttributeError) as e:
                     log_info(e)
                     name, data = "Invalid", None
-                data_dict[name] = data
+                if isinstance(data, dict):
+                    for key in data.keys():
+                        data_dict["_".join([name, key])] = data[key]
+                else:
+                    data_dict[name] = data
             yield data_dict

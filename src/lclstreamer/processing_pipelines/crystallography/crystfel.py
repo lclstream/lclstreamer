@@ -109,6 +109,6 @@ class CrystfelPreprocessingPipeline(ProcessingPipelineProtocol):
                 ].item()
             else:
                 preprocessed_data["optical_laser_active"] = False
-            preprocessed_data["source"] = data["run_info"]["source_identifier"].item()
+            preprocessed_data["source"] = data["run_info_source_identifier"].item()
 
             yield preprocessed_data
