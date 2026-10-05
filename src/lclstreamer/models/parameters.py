@@ -310,6 +310,14 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
         detector_name: Human-readable name of the detector
 
         detector_type: Model or type string identifying the detector hardware
+
+        photon_wavelength_source: Optional flattened data key of the photon_wavelength
+            PV (e.g. ``"SIOC:SYS0:ML00:AO192"``). When unset, photon_wavelength is 0.
+
+        spectrometer_source: Optional flattened data key of a spectrometer source to
+            embed in each image message (e.g. ``"feespec.raw.hproj"``). When unset, no
+            spectrometer fields are added; when set but missing for an event, the frame
+            is still sent without them.
     """
 
     type: Literal["SimplonBinarySerializer"]
@@ -319,6 +327,8 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
     data_collection_rate: str
     detector_name: str
     detector_type: str
+    photon_wavelength_source: str | None = None
+    spectrometer_source: str | None = None
 
 
 class HDF5BinarySerializerParameters(_CustomBaseModel):
@@ -405,6 +415,11 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
 
         buffer: buffer size, if set to 0 the OS default is used
 
+        linger: How long, in milliseconds, close() blocks to flush messages still
+            queued in the send buffer. -1 blocks until they are all delivered, 0
+            (the default) discards them immediately. Set to -1 or a positive value
+            to avoid dropping the tail of the stream when the process exits
+
         role: Whether this node acts as the ZMQ ``"server"`` (binds) or
             ``"client"`` (connects). Defaults to ``"server"``
 
@@ -419,6 +434,7 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
     urls: List[str]
     distribute: bool
     buffer: int
+    linger: int = 0
     role: Literal["server", "client"] = "client"
     library: Literal["zmq"] = "zmq"
     socket_type: Literal["push"] = "push"
