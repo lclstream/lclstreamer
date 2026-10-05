@@ -151,7 +151,7 @@ class Psana2EventSource(EventSourceProtocol):
         """
         psana_event: Any
         for psana_event in self._event_source:
-            data: StrFloatIntNDArray | None
+            data: StrFloatIntNDArray | dict[str, str] | None
             data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
 
@@ -164,5 +164,9 @@ class Psana2EventSource(EventSourceProtocol):
                 except (TypeError, AttributeError) as e:
                     log_info(e)
                     name, data = "Invalid", None
-                data_dict[name] = data
+                if isinstance(data, dict):
+                    for key in data.keys():
+                        data_dict["_".join([name, key])] = data[key]
+                else:
+                    data_dict[name] = data
             yield data_dict

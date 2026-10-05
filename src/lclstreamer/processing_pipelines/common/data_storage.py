@@ -74,22 +74,12 @@ class DataStorage:
         """
         if len(self._data_containers) == 0:
             data_source_name: str
-            for data_source_name in data:
-                data_value: Any | None = data[data_source_name]
+            for data_source_name, data_value in data.items():
                 if data_value is None:
                     log_error_and_exit(
                         f"Data entry {data_source_name} was none in the first "
                         "event. Impossible to determine data size"
                     )
-                elif isinstance(data_value, dict):
-                    data_container: dict[str, DataContainer]
-                    for sub_data_name, sub_data in data_value.items():
-                        subdata_container = DataContainer(
-                            data=[sub_data],
-                            dtype=sub_data.dtype,
-                            shape=sub_data.shape,
-                        )
-                        self._data_containers[sub_data_name] = subdata_container
                 else:
                     data_container = DataContainer(
                         data=[data_value],
@@ -98,57 +88,55 @@ class DataStorage:
                     )
                     self._data_containers[data_source_name] = data_container
         else:
-            for data_name, subdata in data.items():
-                dataitems = subdata.items() if isinstance(subdata, dict) else [(data_name, subdata)]
-                for data_source_name, data_value in dataitems:
-                    if data_source_name not in self._data_containers:
-                        log_error_and_exit(
-                            "The data labels in the current event are not in the labels "
-                            "used to initialize the Data Storage container"
-                        )
-                    data_container = self._data_containers[data_source_name]
+            for data_source_name, data_value in data.items():
+                if data_source_name not in self._data_containers:
+                    log_error_and_exit(
+                        "The data labels in the current event are not in the labels "
+                        "used to initialize the Data Storage container"
+                    )
+                data_container = self._data_containers[data_source_name]
 
-                    if data_value is None:
-                        if data_container.shape is not None:
-                            if numpy.issubdtype(
-                                data_container.dtype, numpy.signedinteger[Any]
-                            ):
-                                data_container.subdata.append(
-                                    numpy.full(data_container.shape, "-999")
-                                )
-                                continue
-                            elif numpy.issubdtype(
-                                data_container.dtype, numpy.floating[Any]
-                            ):
-                                data_container.subdata.append(
-                                    numpy.full(
-                                        data_container.shape,
-                                        numpy.float64("nan"),
-                                        dtype=data_container.dtype,
-                                    )
-                                )
-                                continue
-                            else:
-                                data_container.subdata.append(
-                                    numpy.full(
-                                        data_container.shape, "None", dtype=numpy.str_
-                                    )
-                                )
-                                continue
-                    else:
-                        if data_value.dtype != data_container.dtype:
-                            log_error_and_exit(
-                                f"The dtype of the data entry {data_source_name} in the "
-                                "current event does not match the dtype of the data "
-                                "with which this label was originally initialized"
+                if data_value is None:
+                    if data_container.shape is not None:
+                        if numpy.issubdtype(
+                            data_container.dtype, numpy.signedinteger[Any]
+                        ):
+                            data_container.subdata.append(
+                                numpy.full(data_container.shape, "-999")
                             )
-                        if data_value.shape != data_container.shape:
-                            log_error_and_exit(
-                                f"The shape of the data entry {data_source_name} in the "
-                                "current event does not match the shape of the data "
-                                "with which this label was originally initialized"
+                            continue
+                        elif numpy.issubdtype(
+                            data_container.dtype, numpy.floating[Any]
+                        ):
+                            data_container.subdata.append(
+                                numpy.full(
+                                    data_container.shape,
+                                    numpy.float64("nan"),
+                                    dtype=data_container.dtype,
+                                )
                             )
-                        data_container.data.append(data_value)
+                            continue
+                        else:
+                            data_container.subdata.append(
+                                numpy.full(
+                                    data_container.shape, "None", dtype=numpy.str_
+                                )
+                            )
+                            continue
+                else:
+                    if data_value.dtype != data_container.dtype:
+                        log_error_and_exit(
+                            f"The dtype of the data entry {data_source_name} in the "
+                            "current event does not match the dtype of the data "
+                            "with which this label was originally initialized"
+                        )
+                    if data_value.shape != data_container.shape:
+                        log_error_and_exit(
+                            f"The shape of the data entry {data_source_name} in the "
+                            "current event does not match the shape of the data "
+                            "with which this label was originally initialized"
+                        )
+                    data_container.data.append(data_value)
         self._count += 1
 
     def retrieve_stored_data(self) -> dict[str, StrFloatIntNDArray | None]:
