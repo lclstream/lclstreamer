@@ -50,7 +50,9 @@ names and callable methods to retrieve the desired data.
   contains a colon (PV access). Otherwise it is required. It specifies the dot-separated
   chain of psana1 detector attributes and/or callable methods used to retrieve the data.
   If a list is provided, each element is retrieved independently and the results are
-  stacked into a single array. Example: `calib` or `["calib", "raw"]`
+  stacked into a single array. An alias can be given to use in the data dictionary with
+  the `->` symbol.
+  Valid examples: `calib` `calib -> CalibratedData` or `["calib", "raw -> RawData"]`.
 
 * `dtype` (str): This parameter is optional. It specifies the numpy dtype of the
   returned array. The default value is `float64`. Example: `int32`
@@ -101,7 +103,9 @@ attribute names and callable methods to retrieve the desired data.
   contains a colon (PV access). Otherwise it is required. It specifies the dot-separated
   chain of psana2 detector attributes and/or callable methods used to retrieve the data.
   If a list is provided, each element is retrieved independently and the results are
-  stacked into a single array. Example: `raw.calib`
+  stacked into a single array. An alias can be given to use in the data dictionary with
+  the `->` symbol.
+  Valid examples: `calib` `calib -> CalibratedData` or `["calib", "raw -> RawData"]`.
 
 * `dtype` (str): This parameter is optional. It specifies the numpy dtype of the
   returned array. The default value is `float64`. Example: `float32`
@@ -150,7 +154,7 @@ the user. It is primarily intended for testing and development.
 * `array_dtype` (str): The numerical type of the generated array, in the same format
   as numpy dtype strings. Only integer and floating-point types are supported.
   Example: `float32`
-  
+
 * `always_random` (bool): If set to `True`, it will re-generate the array at every event.
   Otherwise it will generate one array and re-use it for every event (e.g. saves CPU time
   for network throughput testing).

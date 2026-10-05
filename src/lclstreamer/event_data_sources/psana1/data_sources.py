@@ -29,9 +29,9 @@ class Psana1Timestamp(DataSourceProtocol):
 
             parameters: The data source configuration parameters
         """
-        del name
         del parameters
         del additional_info
+        self._name = name
 
     def get_data(self, event: Any) -> NDArray[numpy.float64]:
         """
@@ -50,7 +50,7 @@ class Psana1Timestamp(DataSourceProtocol):
             EventId  # pyright: ignore[reportAttributeAccessIssue]
         )
         timestamp_epoch_format: Any = psana_event_id.time()
-        return numpy.array(
+        return self._name, numpy.array(
             str(timestamp_epoch_format[0]) + "." + str(timestamp_epoch_format[1])
         )
 

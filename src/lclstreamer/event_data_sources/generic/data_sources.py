@@ -183,8 +183,8 @@ class SourceIdentifier(DataSourceProtocol):
                 contain a ``source_identifier`` key whose value is stored and
                 returned by `get_data`
         """
-        del name
         del parameters
+        self._name = name
         self._source_identifier: NDArray[numpy.str_] = numpy.array(
             additional_info["source_identifier"]
         )
@@ -202,7 +202,7 @@ class SourceIdentifier(DataSourceProtocol):
             source_identifier: A 0-dimensional numpy string array containing the
                 source identifier defined at initialization
         """
-        return self._source_identifier
+        return name, self._source_identifier
 
 class BaseDetectorInterface(DataSourceProtocol):
     def __init__(
@@ -312,7 +312,6 @@ class BaseDetectorInterface(DataSourceProtocol):
 
             value: The retrieved data in the format of a numpy array
         """
-        data_dict: dict[str, Any] = {}
         name: str
         base: Any
         data_caller: Any
@@ -325,6 +324,5 @@ class BaseDetectorInterface(DataSourceProtocol):
                     f"Data for the psana data source {self._name} has "
                     "the format of a dictionary! HSD detectors are not supported yet."
                 )
-            data_dict[name] = data
 
-        return data_dict
+        return name, data

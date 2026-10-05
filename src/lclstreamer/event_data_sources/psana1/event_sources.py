@@ -97,14 +97,16 @@ class Psana1EventSource(EventSourceProtocol):
         """
         psana_event: Any
         for psana_event in self._event_source:
-            data: dict[str, StrFloatIntNDArray | None] = {}
+            data: StrFloatIntNDArray | None
+            data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
 
             for data_source_name in self._data_sources:
                 try:
-                    data[data_source_name] = self._data_sources[
+                    name, data = self._data_sources[
                         data_source_name
                     ].get_data(event=psana_event)
                 except (TypeError, AttributeError):
-                    data[data_source_name] = None
-            yield data
+                    name, data = "Invalid", None
+                data_dict[name] = data
+            yield data_dict

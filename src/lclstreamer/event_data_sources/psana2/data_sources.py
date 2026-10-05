@@ -28,7 +28,7 @@ class Psana2Timestamp(DataSourceProtocol):
 
             parameters: The data source configuration parameters
         """
-        pass
+        self._name = name
 
     def get_data(self, event: Any) -> NDArray[numpy.float64]:
         """
@@ -43,7 +43,7 @@ class Psana2Timestamp(DataSourceProtocol):
             timestamp: a 1D numpy array (of type float64) containing the timestamp
             information
         """
-        return numpy.array(event.timestamp, dtype=numpy.float64)
+        return self._name, numpy.array(event.timestamp, dtype=numpy.float64)
 
 
 class Psana2DetectorInterface(BaseDetectorInterface):
@@ -103,6 +103,7 @@ class Psana2RunInfo(DataSourceProtocol):
             "run_number": numpy.array(str(run.runnum), dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
             "source_identifier": numpy.array(additional_info["source_identifier"], dtype=numpy.str_),
         }
+        self._name = name
 
     def get_data(self, event: Any) -> dict[str, NDArray[numpy.str_]]:
         """
@@ -117,4 +118,4 @@ class Psana2RunInfo(DataSourceProtocol):
             value: The retrieved data in the format of a numpy array
         """
 
-        return self._run_data
+        return self._name, self._run_data
