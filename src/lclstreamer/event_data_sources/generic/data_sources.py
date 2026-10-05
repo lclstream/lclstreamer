@@ -48,7 +48,7 @@ class ConstValue(DataSourceProtocol):
                     f"Value '{raw_value}' is not dtype '{self._dtype}' "
                     f"for data source {name}."
                 )
-        self._data_dict: dict[str, NDArray[numpy.number]] = {name: cast_value}
+        self._data: NDArray[numpy.number] = cast_value
         self._name: str = name
 
     def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
@@ -64,7 +64,7 @@ class ConstValue(DataSourceProtocol):
             An 1d array storing the value defined by the data source
             configuration parameters.
         """
-        return self._name, self._data_dict
+        return self._name, self._data
 
 class GenericRandomNumpyArray(DataSourceProtocol):
     """
