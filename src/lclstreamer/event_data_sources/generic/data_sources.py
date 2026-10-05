@@ -49,7 +49,7 @@ class ConstValue(DataSourceProtocol):
                     f"for data source {name}."
                 )
         self._data_dict: dict[str, NDArray[numpy.number]] = {name: cast_value}
-        self._name = name
+        self._name: str = name
 
     def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
         """
@@ -107,7 +107,7 @@ class GenericRandomNumpyArray(DataSourceProtocol):
                 f"Dtype {extra_parameters['array_dtype']} is not available in numpy"
             )
         self._always_random = extra_parameters["always_random"] # Check in models whether it is bool not here
-        self._name = name
+        self._name: str = name
 
         if not self._always_random:
             # Pre-generate the array and re-use it to save computing time
@@ -152,7 +152,8 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             A dictionary of random numbers as requested by the user.
         """
         del event
-        data: Any
+        data: NDArray[numpy.number]
+
         if self._always_random:
             data = self._gen_data(self._array_dtype, self._array_shape)
         else:
@@ -315,10 +316,10 @@ class BaseDetectorInterface(DataSourceProtocol):
         """
         base: Any
         data_caller: Any
-        data = Any
+        data: NDArray[numpy.number]
+        name: str
 
         for alias, base, data_caller in self._call_get_data:
-            name: str
             name, data = data_caller(alias, base, event)
             if isinstance(data, dict):
                 log_error_and_exit(
