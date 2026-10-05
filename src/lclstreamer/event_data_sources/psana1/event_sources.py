@@ -5,7 +5,7 @@ from psana import DataSource, MPIDataSource  # type: ignore
 from stream.core import source
 
 from ...models.parameters import DataSourceParameters, Psana1EventSourceParameters
-from ...utils.logging import log_error_and_exit
+from ...utils.logging import log_info, log_error_and_exit
 from ...utils.protocols import DataSourceProtocol, EventSourceProtocol
 from ...utils.typing import StrFloatIntNDArray
 from ..generic.data_sources import GenericRandomNumpyArray as GenericRandomNumpyArray
@@ -97,14 +97,18 @@ class Psana1EventSource(EventSourceProtocol):
         """
         psana_event: Any
         for psana_event in self._event_source:
-            data: dict[str, StrFloatIntNDArray | None] = {}
+            data: StrFloatIntNDArray | None
+            data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
 
             for data_source_name in self._data_sources:
+                name: str
                 try:
-                    data[data_source_name] = self._data_sources[
+                    name, data = self._data_sources[
                         data_source_name
                     ].get_data(event=psana_event)
-                except (TypeError, AttributeError):
-                    data[data_source_name] = None
-            yield data
+                except (TypeError, AttributeError) as e:
+                    log_info(e)
+                    name, data = "Invalid", None
+                data_dict[name] = data
+            yield data_dict
