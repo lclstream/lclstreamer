@@ -1,11 +1,11 @@
 from typing import Any
 
 import numpy
-from numpy.typing import NDArray
 
 from ...models.parameters import DataSourceParameters
 from ...utils.logging import log_error_and_exit
 from ...utils.protocols import DataSourceProtocol
+from ...utils.typing import StrFloatIntNDArray
 
 
 class ConstValue(DataSourceProtocol):
@@ -42,16 +42,16 @@ class ConstValue(DataSourceProtocol):
                 f"Entry 'dtype' is not defined for data source {name}"
             )
         raw_value: numpy.number = extra_parameters["value"]
-        cast_value: numpy.NDArray[numpy.number] = numpy.array(raw_value, dtype=self._dtype)
+        cast_value: StrFloatIntNDArray = numpy.array(raw_value, dtype=self._dtype)
         if not numpy.array_equal(cast_value, numpy.array(raw_value)):
                  log_error_and_exit(
                     f"Value '{raw_value}' is not dtype '{self._dtype}' "
                     f"for data source {name}."
                 )
-        self._data: NDArray[numpy.number] = cast_value
+        self._data: StrFloatIntNDArray = cast_value
         self._name: str = name
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves the constant float or int value defined in the configuration file as an 1d array
 
@@ -64,7 +64,7 @@ class ConstValue(DataSourceProtocol):
             An 1d array storing the value defined by the data source
             configuration parameters.
         """
-        return self._name, self._data
+        return {self._name: self._data}
 
 class GenericRandomNumpyArray(DataSourceProtocol):
     """
@@ -113,7 +113,7 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             # Pre-generate the array and re-use it to save computing time
             self._array = self._gen_data(self._array_dtype, self._array_shape)
 
-    def _gen_data(self, dtype, shape) -> NDArray[numpy.number]:
+    def _gen_data(self, dtype, shape) -> StrFloatIntNDArray:
         """
         Generates an array of int of float random numbers
 
@@ -139,7 +139,7 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             )
 
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves an array of int of float random numbers
 
@@ -152,13 +152,13 @@ class GenericRandomNumpyArray(DataSourceProtocol):
             A dictionary of random numbers as requested by the user.
         """
         del event
-        data: NDArray[numpy.number]
+        data: StrFloatIntNDArray
 
         if self._always_random:
             data = self._gen_data(self._array_dtype, self._array_shape)
         else:
             data = self._array
-        return self._name, data
+        return {self._name: data}
 
 
 class SourceIdentifier(DataSourceProtocol):
@@ -187,11 +187,11 @@ class SourceIdentifier(DataSourceProtocol):
         """
         del parameters
         self._name = name
-        self._source_identifier: NDArray[numpy.str_] = numpy.array(
+        self._source_identifier: StrFloatIntNDArray = numpy.array(
             additional_info["source_identifier"]
         )
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.str_]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves the source identifier as a numpy string array.
 
@@ -204,7 +204,7 @@ class SourceIdentifier(DataSourceProtocol):
             source_identifier: A 0-dimensional numpy string array containing the
                 source identifier defined at initialization
         """
-        return self._name, self._source_identifier
+        return {self._name: self._source_identifier}
 
 class BaseDetectorInterface(DataSourceProtocol):
     def __init__(
@@ -258,8 +258,8 @@ class BaseDetectorInterface(DataSourceProtocol):
             det_fields: list[str] = ([fields] if isinstance(fields, (str, tuple)) else fields)
 
             for psana_fields in det_fields:
-                data_caller: Any = None
-                psana_field: str = None
+                data_caller: Any
+                psana_field: str
                 alias: str = name
                 if "->" in psana_fields:
                     psana_field, alias = [k.strip() for k in psana_fields.split("->")]
@@ -290,19 +290,19 @@ class BaseDetectorInterface(DataSourceProtocol):
     def _setup_special_fields(self, psana_fields, data_caller):
         return data_caller
 
-    def _get_callable_with_event(self, name, base, event):
+    def _get_callable_with_event(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
         return (name, numpy.asarray(base(event), dtype=self.dtype))
 
-    def _get_callable_with_noevent(self, name, base, event):
+    def _get_callable_with_noevent(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
         return (name, numpy.asarray(base(), dtype=self.dtype))
 
-    def _get_noncallable(self, name, base, event):
+    def _get_noncallable(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
         return (name, numpy.asarray(base, dtype=self.dtype))
 
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.number]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves Detector values from a psana event
 
@@ -316,8 +316,7 @@ class BaseDetectorInterface(DataSourceProtocol):
         """
         base: Any
         data_caller: Any
-        data: NDArray[numpy.number]
-        name: str
+        data_dict: dict[str, StrFloatIntNDArray | None] = {}
 
         for alias, base, data_caller in self._call_get_data:
             name, data = data_caller(alias, base, event)
@@ -326,5 +325,6 @@ class BaseDetectorInterface(DataSourceProtocol):
                     f"Data for the psana data source {self._name} has "
                     "the format of a dictionary! HSD detectors are not supported yet."
                 )
+            data_dict[name] = data
 
-        return name, data
+        return data_dict
