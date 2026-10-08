@@ -8,12 +8,13 @@ from pathlib import Path
 from queue import Empty
 from typing import Callable, cast
 
-from click.testing import Result
+from click.testing import Result, CliRunner as ClickCliRunner
 from typer.testing import CliRunner
 
 from lclstreamer.cmd.lclstreamer import app
 
 runner: CliRunner = CliRunner()
+click_runner: ClickCliRunner = ClickCliRunner()
 
 configuration: str = """
 source_identifier: "none"
@@ -156,7 +157,7 @@ def test_app() -> None:
         # Add extra delay to ensure server socket is fully ready to receive
         time.sleep(1.0)
 
-        with runner.isolated_filesystem():
+        with click_runner.isolated_filesystem():
             current_directory: Path = Path.cwd()
             configuration_file_name: Path = current_directory / "lclstreamer.yaml"
             configuration_file_name.write_text(configuration, "utf-8")

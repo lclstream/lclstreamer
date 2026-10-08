@@ -1,6 +1,8 @@
 from collections.abc import Generator, Iterator
 from typing import Any
 
+import numpy
+from numpy.typing import NDArray
 from stream.core import source
 from typing_extensions import Protocol
 
@@ -54,7 +56,7 @@ class DataSourceProtocol(Protocol):
         """Initializes the data source"""
         ...
 
-    def get_data(self, event: Any) -> StrFloatIntNDArray:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """Extracts data from an event"""
         ...
 

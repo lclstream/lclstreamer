@@ -47,30 +47,19 @@ data_serializer:
     type: HDF5BinarySerializer
     compression_level: 0
     compression: gzip
-    #fields:
+    fields:
     #    #timestamp: data/timestamp
-    #    jungfrau.raw.raw: data/jungfrau_raw
+        jungfrau.raw.raw: data/jungfrau_raw
     #    #jungfrau_raw: data/jungfrau_raw
 
 # Data handler - stream to GPU consumer
 data_handlers:
   - type: BinaryDataStreamingDataHandler
     urls:
-    #        - "tcp://sdfiana024:8088"
-    #        - "tcp://sdfampere010:8086"
-    #        - "tcp://sdfampere010:8087"
-    #        - "tcp://sdfampere011:8086"
-    #        - "tcp://sdfampere011:8087"
-    #        - "ipc:///tmp/sdfmilan"
-    #        - "tcp://sdfmilan243:8086"
-    #        - "tcp://sdfmilan244:8086"
             - "tcp://sdfiana025:8087"
             - "tcp://sdfiana023:8086"
-            - "tcp://sdfiana023:8087"
-            - "tcp://sdfiana025:8086"
     #        - "tcp://134.79.23.43:5000"
-    #        - "tcp://sdfiana025:8087"
-    distribute: True  # True: round robin connect the ranks, False: all ranks connect to all urls (same data sent)
+    distribute: True
     buffer: 67108864 # 64 * 1024 * 1024 (64MB), - Capped by OS max, leave it as 0 to use OS default
     role: client
     library: zmq
