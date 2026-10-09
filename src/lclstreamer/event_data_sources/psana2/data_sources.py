@@ -6,7 +6,9 @@ from numpy.typing import NDArray
 from ...models.parameters import DataSourceParameters
 from ...utils.logging import log_error_and_exit
 from ...utils.protocols import DataSourceProtocol
+from ...utils.typing import StrFloatIntNDArray
 from ..generic.data_sources import BaseDetectorInterface
+
 
 class Psana2Timestamp(DataSourceProtocol):
     """
@@ -30,7 +32,7 @@ class Psana2Timestamp(DataSourceProtocol):
         """
         self._name = name
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.float64]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves timestamp information from a psana2 event
 
@@ -43,7 +45,7 @@ class Psana2Timestamp(DataSourceProtocol):
             timestamp: a 1D numpy array (of type float64) containing the timestamp
             information
         """
-        return self._name, numpy.array(event.timestamp, dtype=numpy.float64)
+        return {self._name: numpy.array(event.timestamp, dtype=numpy.float64)}
 
 
 class Psana2DetectorInterface(BaseDetectorInterface):
@@ -97,15 +99,14 @@ class Psana2RunInfo(DataSourceProtocol):
             parameters: The data source configuration parameters
         """
         run: Any = additional_info["run"]
-        self._run_data: dict[str, NDArray[numpy.str_]] = {  # pyright: ignore[reportUnknownMemberType]
-            "experiment": numpy.array(run.expt, dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
-            "run_timestamp": numpy.array(str(run.timestamp), dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            "run_number": numpy.array(str(run.runnum), dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
-            "source_identifier": numpy.array(additional_info["source_identifier"], dtype=numpy.str_),
+        self._run_data: dict[str, StrFloatIntNDArray | None] = {  # pyright: ignore[reportUnknownMemberType]
+            name + "_experiment": numpy.array(run.expt, dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+            name + "_run_timestamp": numpy.array(str(run.timestamp), dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
+            name + "_run_number": numpy.array(str(run.runnum), dtype=numpy.str_),  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownArgumentType]
+            name + "_source_identifier": numpy.array(additional_info["source_identifier"], dtype=numpy.str_),
         }
-        self._name = name
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.str_]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves the detector info from a psana2 event
 
@@ -118,4 +119,4 @@ class Psana2RunInfo(DataSourceProtocol):
             value: The retrieved data in the format of a numpy array
         """
 
-        return self._name, self._run_data
+        return self._run_data

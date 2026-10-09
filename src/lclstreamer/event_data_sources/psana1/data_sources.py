@@ -1,13 +1,13 @@
 from typing import Any
 
 import numpy
-from numpy.typing import NDArray
 from psana import Detector, EventId  # type: ignore
 
 from ...models.parameters import DataSourceParameters
-from ...utils.logging import log_error_and_exit
 from ...utils.protocols import DataSourceProtocol
+from ...utils.typing import StrFloatIntNDArray
 from ..generic.data_sources import BaseDetectorInterface
+
 
 class Psana1Timestamp(DataSourceProtocol):
     """
@@ -33,7 +33,7 @@ class Psana1Timestamp(DataSourceProtocol):
         del additional_info
         self._name = name
 
-    def get_data(self, event: Any) -> tuple[str, NDArray[numpy.float64]]:
+    def get_data(self, event: Any) -> dict[str, StrFloatIntNDArray | None]:
         """
         Retrieves timestamp information from a psana1 event
 
@@ -49,10 +49,10 @@ class Psana1Timestamp(DataSourceProtocol):
         psana_event_id: Any = event.get(
             EventId  # pyright: ignore[reportAttributeAccessIssue]
         )
-        timestamp_epoch_format: Any = psana_event_id.time()
-        return self._name, numpy.array(
+        timestamp_epoch_format: StrFloatIntNDArray = psana_event_id.time()
+        return {self._name: numpy.array(
             str(timestamp_epoch_format[0]) + "." + str(timestamp_epoch_format[1])
-        )
+        )}
 
 
 class Psana1DetectorInterface(BaseDetectorInterface):
@@ -85,14 +85,14 @@ class Psana1DetectorInterface(BaseDetectorInterface):
         return Detector(self._detector_name)
 
     def _setup_special_fields(self, psana_fields, data_caller):
-        if psana_fields == ["eventCodes"]:
+        if "eventCodes" in psana_fields:
             data_caller = self._get_evr_codes
             self.dtype = numpy.int64
         return data_caller
 
-    def _get_evr_codes(self, name, base, event):
+    def _get_evr_codes(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
         evr_codes: list[numpy.int64] = base(event)
-        data: list[numpy.int64] = numpy.pad(evr_codes,
+        data: StrFloatIntNDArray = numpy.pad(evr_codes,
             pad_width=(0, 256 - len(evr_codes)),
             mode="constant",
             constant_values=(0, 0),

@@ -6,7 +6,7 @@ from ...models.parameters import (
     DataSourceParameters,
     InternalEventSourceParameters,
 )
-from ...utils.logging import log_info, log_error_and_exit
+from ...utils.logging import log_error_and_exit, log_info
 from ...utils.protocols import DataSourceProtocol, EventSourceProtocol
 from ...utils.typing import (
     StrFloatIntNDArray,
@@ -84,22 +84,18 @@ class InternalEventSource(EventSourceProtocol):
             data: A dictionary storing data for an event
         """
         for i in range(self.number_of_events_to_generate):
-            data: StrFloatIntNDArray | dict[str, str] | None
             data_dict: dict[str, StrFloatIntNDArray | None] = {}
             data_source_name: str
 
             for data_source_name in self._data_sources:
-                name: str
+                return_dict: dict[str, StrFloatIntNDArray | None] = {}
                 try:
-                    name, data = self._data_sources[
+                    return_dict = self._data_sources[
                         data_source_name
                     ].get_data(event=i)
                 except (TypeError, AttributeError) as e:
                     log_info(e)
-                    name, data = "Invalid", None
-                if isinstance(data, dict):
-                    for key in data.keys():
-                        data_dict["_".join([name, key])] = data[key]
-                else:
-                    data_dict[name] = data
+                    return_dict["Invalid"] = None
+                data_dict |= return_dict
+
             yield data_dict
