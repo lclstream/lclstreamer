@@ -499,25 +499,35 @@ class Parameters(_CustomBaseModel):
     data_serializer: DataSerializerParameters
     data_handlers: List[DataHandlerParameters]
 
-    @model_validator(mode="after")
-    def _check_model(self) -> Self:
-        # Validates cross-field constraints after model initialization
-
-        if self.data_serializer.type == "SimplonBinarySerializer":
-            required_sources = [
+    requirements: dict[str, list[str]] = {
+            "SimplonBinarySerializer": [
                 "timestamp",
                 "detector_data",
                 # "photon_wavelength",
                 "detector_geometry",
                 "run_info",
+            ],
+            # Note: crystfel will break if alias is put in for these.
+            "CrystfelPreprocessingPipeline": [
+                "detector_data",
+                "photon_wavelength",
+                "detector_distance",
+                "timestamp",
+                "run_info"
             ]
-            source_missing = [
-                k for k in required_sources if k not in self.data_sources.keys()
-            ]
-            if source_missing:
-                raise ValueError(
-                    f"Required fields: {source_missing} is missing from data_sources "
-                    "for SimplonBinarySerializer."
-                )
+        }
 
+    @model_validator(mode="after")
+    def _check_model(self) -> Self:
+        # Check if required sources are missing
+        for pipeline in [self.processing_pipeline.type, self.data_serializer.type]:
+            if pipeline in self.requirements:
+                source_missing = [
+                    k for k in self.requirements[pipeline] if k not in self.data_sources
+                ]
+                if source_missing:
+                    raise ValueError(
+                        f"Required fields: {source_missing} is missing from data_sources "
+                            f"for {pipeline}."
+                        )
         return self
