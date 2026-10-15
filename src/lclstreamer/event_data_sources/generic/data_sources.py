@@ -290,14 +290,18 @@ class BaseDetectorInterface(DataSourceProtocol):
     def _setup_special_fields(self, psana_fields, data_caller):
         return data_caller
 
+    def _as_array(self, data: Any) -> StrFloatIntNDArray | None:
+        # psana returns None for a missing reading: keep it None, not a 0-d NaN
+        return None if data is None else numpy.asarray(data, dtype=self.dtype)
+
     def _get_callable_with_event(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
-        return (name, numpy.asarray(base(event), dtype=self.dtype))
+        return (name, self._as_array(base(event)))
 
     def _get_callable_with_noevent(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
-        return (name, numpy.asarray(base(), dtype=self.dtype))
+        return (name, self._as_array(base()))
 
     def _get_noncallable(self, name, base, event) -> tuple[str, StrFloatIntNDArray | None]:
-        return (name, numpy.asarray(base, dtype=self.dtype))
+        return (name, self._as_array(base))
 
     def _create_detector(self, *args, **kwargs):
         raise NotImplementedError("Derived classes have to implement their _create_detector")

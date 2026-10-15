@@ -297,7 +297,7 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
         type: Discriminator field, must be ``"SimplonBinarySerializer"``
 
         data_source_to_serialize: Name of the data source whose array will be
-            compressed and embedded in each Simplon image message
+            embedded in each Simplon image message
 
         polarization_fraction: Fraction of linear polarization of the X-ray
             beam (between 0 and 1)
@@ -311,6 +311,12 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
         detector_name: Human-readable name of the detector
 
         detector_type: Model or type string identifying the detector hardware
+
+        photon_wavelength_source: Optional data key of the photon wavelength PV (in
+            nm). When unset, photon_wavelength is 0
+
+        spectrometer_source: Optional data key of a spectrometer array to include in
+            each image message
     """
 
     type: Literal["SimplonBinarySerializer"]
@@ -320,6 +326,8 @@ class SimplonBinarySerializerParameters(_CustomBaseModel):
     data_collection_rate: str
     detector_name: str
     detector_type: str
+    photon_wavelength_source: str | None = None
+    spectrometer_source: str | None = None
 
 
 class HDF5BinarySerializerParameters(_CustomBaseModel):
@@ -406,6 +414,9 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
 
         buffer: buffer size, if set to 0 the OS default is used
 
+        linger: Time in milliseconds that closing the socket waits to send queued
+            messages. 0 (the default) discards them, -1 waits without limit
+
         role: Whether this node acts as the ZMQ ``"server"`` (binds) or
             ``"client"`` (connects). Defaults to ``"server"``
 
@@ -420,6 +431,7 @@ class BinaryDataStreamingDataHandlerParameters(_CustomBaseModel):
     urls: List[str]
     distribute: bool = False
     buffer: int = 0
+    linger: int = 0
     role: Literal["server", "client"] = "client"
     library: Literal["zmq"] = "zmq"
     socket_type: Literal["push"] = "push"

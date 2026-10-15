@@ -62,82 +62,74 @@ class DataStorage:
         The function takes a dictionary storing numpy arrays, each identified
         by a dictionary key label. When called for the first time, it uses
         the incoming data to determine labels and dtypes of the numpy arrays to
-        accumulate. All subsequent calls of the function will only accept data arrays
-        with the same labels and dtypes as the initial call, or data whose value is
-        None. If the data value is None, this function will the fill the missing data
-        with appropriate null values (numpy.NaN for float data, the number -999 for int
-        data, and the string "None" for str data)
+        accumulate. Subsequent calls accept data arrays with the same dtypes as earlier
+        ones, or data whose value is None. A label first seen after the initial call
+        is added, with the earlier events null-filled. If the data value is None, or a
+        label is absent from the event, this function fills the missing data with
+        appropriate null values (numpy.NaN for float data, the number -999 for signed
+        int data, the largest value for unsigned int data, and the string "None" for
+        str data)
 
         Arguments:
 
             data: a dictionary storing numpy arrays
         """
-        if len(self._data_containers) == 0:
-            data_source_name: str
-            for data_source_name, data_value in data.items():
+        data_source_name: str
+        for data_source_name, data_value in data.items():
+            if data_source_name not in self._data_containers:
                 if data_value is None:
-                    log_error_and_exit(
-                        f"Data entry {data_source_name} was none in the first "
-                        "event. Impossible to determine data size"
-                    )
-                else:
-                    data_container = DataContainer(
-                        data=[data_value],
-                        dtype=data_value.dtype,
-                        shape=data_value.shape,
-                    )
-                    self._data_containers[data_source_name] = data_container
-        else:
-            for data_source_name, data_value in data.items():
-                if data_source_name not in self._data_containers:
-                    log_error_and_exit(
-                        "The data labels in the current event are not in the labels "
-                        "used to initialize the Data Storage container"
-                    )
-                data_container = self._data_containers[data_source_name]
+                    # Cannot be sized yet: its container is created on a later event
+                    continue
+                # First reading of a label: null-fill the earlier events
+                self._data_containers[data_source_name] = DataContainer(
+                    data=[
+                        self._null_value(data_value.shape, data_value.dtype)
+                        for _ in range(self._count)
+                    ],
+                    dtype=data_value.dtype,
+                    shape=data_value.shape,
+                )
+            data_container = self._data_containers[data_source_name]
 
-                if data_value is None:
-                    if data_container.shape is not None:
-                        if numpy.issubdtype(
-                            data_container.dtype, numpy.signedinteger[Any]
-                        ):
-                            data_container.subdata.append(
-                                numpy.full(data_container.shape, "-999")
-                            )
-                            continue
-                        elif numpy.issubdtype(
-                            data_container.dtype, numpy.floating[Any]
-                        ):
-                            data_container.subdata.append(
-                                numpy.full(
-                                    data_container.shape,
-                                    numpy.float64("nan"),
-                                    dtype=data_container.dtype,
-                                )
-                            )
-                            continue
-                        else:
-                            data_container.subdata.append(
-                                numpy.full(
-                                    data_container.shape, "None", dtype=numpy.str_
-                                )
-                            )
-                            continue
-                else:
-                    if data_value.dtype != data_container.dtype:
-                        log_error_and_exit(
-                            f"The dtype of the data entry {data_source_name} in the "
-                            "current event does not match the dtype of the data "
-                            "with which this label was originally initialized"
-                        )
-                    if data_value.shape != data_container.shape:
-                        log_error_and_exit(
-                            f"The shape of the data entry {data_source_name} in the "
-                            "current event does not match the shape of the data "
-                            "with which this label was originally initialized"
-                        )
-                    data_container.data.append(data_value)
+            if data_value is None:
+                data_container.data.append(
+                    self._null_value(data_container.shape, data_container.dtype)
+                )
+            else:
+                if data_value.dtype != data_container.dtype:
+                    log_error_and_exit(
+                        f"The dtype of the data entry {data_source_name} in the "
+                        "current event does not match the dtype of the data "
+                        "with which this label was originally initialized"
+                    )
+                if data_value.shape != data_container.shape:
+                    log_error_and_exit(
+                        f"The shape of the data entry {data_source_name} in the "
+                        "current event does not match the shape of the data "
+                        "with which this label was originally initialized"
+                    )
+                data_container.data.append(data_value)
+
+        # A label absent from this event (e.g. its data source failed): null-fill it
+        for data_container in self._data_containers.values():
+            if len(data_container.data) == self._count:
+                data_container.data.append(
+                    self._null_value(data_container.shape, data_container.dtype)
+                )
         self._count += 1
+
+    def _null_value(
+        self, shape: tuple[int, ...], dtype: DTypeLike
+    ) -> StrFloatIntNDArray:
+        """A null placeholder: NaN for float, -999 for signed int, the largest value for
+        unsigned int, "None" otherwise"""
+        if numpy.issubdtype(dtype, numpy.floating):
+            return numpy.full(shape, numpy.float64("nan"), dtype=dtype)
+        elif numpy.issubdtype(dtype, numpy.signedinteger):
+            return numpy.full(shape, -999, dtype=dtype)
+        elif numpy.issubdtype(dtype, numpy.unsignedinteger):
+            return numpy.full(shape, numpy.iinfo(dtype).max, dtype=dtype)
+        return numpy.full(shape, "None")
 
     def retrieve_stored_data(self) -> dict[str, StrFloatIntNDArray | None]:
         """
@@ -178,3 +170,16 @@ class DataStorage:
         for data_source_name in self._data_containers:
             self._data_containers[data_source_name].data = []
         self._count = 0
+
+
+def is_null_value(value: Any) -> bool:
+    """Whether a value consists only of the null placeholders of DataStorage._null_value:
+    NaN for float, -999 for signed int, the largest value for unsigned int"""
+    array: Any = numpy.asarray(value)
+    if numpy.issubdtype(array.dtype, numpy.floating):
+        return not bool(numpy.isfinite(array).any())
+    elif numpy.issubdtype(array.dtype, numpy.signedinteger):
+        return bool((array == -999).all())
+    elif numpy.issubdtype(array.dtype, numpy.unsignedinteger):
+        return bool((array == numpy.iinfo(array.dtype).max).all())
+    return False

@@ -23,8 +23,8 @@ data_sources:
         type: Psana2DetectorInterface
         psana_name: "{{ areadetector_name }}" # "jungfrau"
         psana_fields: [
-                "_detid", # Detector ID
-                "raw._det_geotxt_default", # Geometry data
+                "_detid -> DetectorID", # Detector ID
+                "raw._det_geotxt_default -> DetectorGeometry", # Geometry data
                 #"raw._pixel_coords", # Pixel coords
             ]
         dtype: str
@@ -33,11 +33,11 @@ data_sources:
         type: Psana2DetectorInterface
         psana_name: "{{ ebeam_detector }}" # ebeamh
         psana_fields: [
-                "raw.ebeamUndAngX", # Angle X
-                "raw.ebeamUndAngY", # Angle Y
-                "raw.ebeamUndPosX", # Pos X
-                "raw.ebeamUndPosY", # Pos Y
-                "raw.ebeamL3Energy", # Beam energy
+                "raw.ebeamUndAngX -> AngleX", # Angle X
+                "raw.ebeamUndAngY -> AngleY", # Angle Y
+                "raw.ebeamUndPosX -> PositionX", # Pos X
+                "raw.ebeamUndPosY -> PositionY", # Pos Y
+                "raw.ebeamPhotonEnergy -> PhotonEnergy", # Photon energy
             ]
 
     run_info:
@@ -52,7 +52,7 @@ processing_pipeline:
 
 data_serializer:
     type: SimplonBinarySerializer
-    data_source_to_serialize: "{{ areadetector_name }}.{{ areadetector_field }}"
+    data_source_to_serialize: detector_data
     polarization_fraction: {{ polarization_fraction }} # e.g. 0
     polarization_axis: {{ polarization_axis }} # e.g. [1.0, 0.0, 0.0]
     data_collection_rate: "{{ collection_rate }}"  # e.g. "120Hz"
