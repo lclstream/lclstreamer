@@ -1,0 +1,15 @@
+[project]
+name = "lclstreamer-models"
+version = "0.1.0"
+description = "lclstreamer configuration models, shared with lclstream_api"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "lclstreamer.models"
