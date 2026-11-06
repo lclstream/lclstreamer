@@ -3,6 +3,7 @@ name = "lclstreamer"
 requires-python = ">=3.11,<3.14"
 version = "0.3.0"
 dependencies = [
+    "lclstreamer-models",
     "typer",
     "numpy",
     "pydantic",
@@ -48,6 +49,9 @@ profile = "black"
 [tool.mypy]
 show_error_codes = true
 python_version = 3.11
+# lclstreamer is a namespace package split across src/ and libs/.
+explicit_package_bases = true
+mypy_path = ["src", "libs/lclstreamer-models/src"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -67,6 +71,7 @@ channels = ["lcls-ii", "conda-forge/label/mpi-external"]
 
 [tool.pixi.pypi-dependencies]
 lclstreamer = { path = ".", editable = true }
+lclstreamer-models = { path = "libs/lclstreamer-models", editable = true }
 
 [tool.pixi.environments]
 psana1 = ["psana1"]

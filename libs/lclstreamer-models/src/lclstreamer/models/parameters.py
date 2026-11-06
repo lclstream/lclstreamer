@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Dict, List, Literal, Self, Union, Any
+from typing import Annotated, Dict, List, Literal, Self, Union, Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
-from typing_extensions import Annotated
 
 
 class _CustomBaseModel(BaseModel):

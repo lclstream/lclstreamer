@@ -67,6 +67,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2025b-h78e105d_0.conda
       - pypi: ./
+      - pypi: ./libs/lclstreamer-models
       - pypi: git+https://github.com/frobnitzem/stream.py#437482e4849772dc1e2d80694502df8cd7ebe931
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/03/46/25d64bcd7821c8d6f1080e1c43d5fcdfc442a18f759a230b5ccdc891093e/sphinxcontrib_mermaid-2.0.1-py3-none-any.whl
@@ -353,6 +354,7 @@ environments:
       - conda: https://conda.anaconda.org/lcls-i/linux-64/ndarray-psana-1.1.11-hbdd6aa6_30.tar.bz2
       - conda: https://conda.anaconda.org/lcls-i/linux-64/psana-4.0.66-py311h38c5fad_4.tar.bz2
       - pypi: ./
+      - pypi: ./libs/lclstreamer-models
       - pypi: git+https://github.com/frobnitzem/stream.py#437482e4849772dc1e2d80694502df8cd7ebe931
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/03/46/25d64bcd7821c8d6f1080e1c43d5fcdfc442a18f759a230b5ccdc891093e/sphinxcontrib_mermaid-2.0.1-py3-none-any.whl
@@ -725,6 +727,7 @@ environments:
       - conda: https://conda.anaconda.org/lcls-ii/noarch/amityping-1.2.0-pyhde42818_4.tar.bz2
       - conda: https://conda.anaconda.org/lcls-ii/noarch/psmon-1.0.11-pyh6c4a22f_0.conda
       - pypi: ./
+      - pypi: ./libs/lclstreamer-models
       - pypi: git+https://github.com/frobnitzem/stream.py#437482e4849772dc1e2d80694502df8cd7ebe931
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/03/46/25d64bcd7821c8d6f1080e1c43d5fcdfc442a18f759a230b5ccdc891093e/sphinxcontrib_mermaid-2.0.1-py3-none-any.whl
@@ -1084,6 +1087,7 @@ environments:
       - conda: https://conda.anaconda.org/lcls-ii/noarch/amityping-1.2.1-pyh332efcf_10.conda
       - conda: https://conda.anaconda.org/lcls-ii/noarch/psmon-1.0.11-pyh332efcf_10.conda
       - pypi: ./
+      - pypi: ./libs/lclstreamer-models
       - pypi: git+https://github.com/frobnitzem/stream.py#437482e4849772dc1e2d80694502df8cd7ebe931
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/04/54/6f679c435d28e0a568d8e8a7c0a93a09010818634c3c3907fc98d8983770/roman_numerals-4.1.0-py3-none-any.whl
@@ -10164,6 +10168,7 @@ packages:
 - pypi: ./
   name: lclstreamer
   requires_dist:
+  - lclstreamer-models
   - typer
   - numpy
   - pydantic
@@ -10187,6 +10192,11 @@ packages:
   - msgpack-numpy
   - msgpack-types
   requires_python: '>=3.11,<3.14'
+- pypi: ./libs/lclstreamer-models
+  name: lclstreamer-models
+  requires_dist:
+  - pydantic>=2
+  requires_python: '>=3.11'
 - pypi: git+https://github.com/frobnitzem/stream.py#437482e4849772dc1e2d80694502df8cd7ebe931
   name: stream
   version: 1.0.0
