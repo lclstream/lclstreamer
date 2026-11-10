@@ -60,14 +60,11 @@ platforms = ["linux-64"]
 [tool.pixi.feature.psana1]
 channels = ["lcls-i"]
 
-[tool.pixi.feature.psana2]
-channels = ["lcls-ii"]
-
 # "extmpi" = external MPI: openmpi comes from the conda-forge mpi-external label,
 # a stub that lets mpi4py link against the OpenMPI ABI without bundling an MPI
 # implementation.
 [tool.pixi.feature.psana2extmpi]
-channels = ["lcls-ii", "conda-forge/label/mpi-external"]
+channels = ["conda-forge/label/mpi-external"]
 
 [tool.pixi.pypi-dependencies]
 lclstreamer = { path = ".", editable = true }
@@ -100,17 +97,23 @@ mpi4py = { version="*", channel="conda-forge" }
 
 [tool.pixi.feature.psana2.dependencies]
 python = "3.13.*"
-psana = { version="==4.3.2", channel="lcls-ii" }
 mpi4py = { version="*", channel="conda-forge" }
+pykerberos = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge" }
 prometheus-cpp = {version="*", channel="conda-forge" }
 
+[tool.pixi.feature.psana2.pypi-dependencies]
+psana = "==4.3.5"
+
 [tool.pixi.feature.psana2extmpi.dependencies]
 python = "3.13.*"
-psana = { version="==4.3.2", channel="lcls-ii" }
 mpi4py = { version="*", channel="conda-forge" }
+pykerberos = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge/label/mpi-external" }
 prometheus-cpp = {version="*", channel="conda-forge" }
+
+[tool.pixi.feature.psana2extmpi.pypi-dependencies]
+psana = "==4.3.5"
 
 [tool.ruff]
 exclude = [
