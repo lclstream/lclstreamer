@@ -3,6 +3,7 @@ name = "lclstreamer"
 requires-python = ">=3.11,<3.14"
 version = "0.3.0"
 dependencies = [
+    "lclstreamer-models",
     "typer",
     "numpy",
     "pydantic",
@@ -48,6 +49,9 @@ profile = "black"
 [tool.mypy]
 show_error_codes = true
 python_version = 3.11
+# lclstreamer is a namespace package split across src/ and libs/.
+explicit_package_bases = true
+mypy_path = ["src", "libs/lclstreamer-models/src"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -56,17 +60,15 @@ platforms = ["linux-64"]
 [tool.pixi.feature.psana1]
 channels = ["lcls-i"]
 
-[tool.pixi.feature.psana2]
-channels = ["lcls-ii"]
-
 # "extmpi" = external MPI: openmpi comes from the conda-forge mpi-external label,
 # a stub that lets mpi4py link against the OpenMPI ABI without bundling an MPI
 # implementation.
 [tool.pixi.feature.psana2extmpi]
-channels = ["lcls-ii", "conda-forge/label/mpi-external"]
+channels = ["conda-forge/label/mpi-external"]
 
 [tool.pixi.pypi-dependencies]
 lclstreamer = { path = ".", editable = true }
+lclstreamer-models = { path = "libs/lclstreamer-models", editable = true }
 
 [tool.pixi.environments]
 psana1 = ["psana1"]
@@ -96,20 +98,22 @@ mpi4py = { version="*", channel="conda-forge" }
 [tool.pixi.feature.psana2.dependencies]
 python = "3.13.*"
 mpi4py = { version="*", channel="conda-forge" }
+pykerberos = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge" }
 prometheus-cpp = {version="*", channel="conda-forge" }
 
 [tool.pixi.feature.psana2.pypi-dependencies]
-psana = { url = "https://files.pythonhosted.org/packages/20/a1/a1e6442a4febe8519d21cc561fcc383eb4b5633e38d7c50a47436467f606/psana-4.3.5-cp313-cp313-manylinux_2_28_x86_64.whl" }
+psana = "==4.3.5"
 
 [tool.pixi.feature.psana2extmpi.dependencies]
 python = "3.13.*"
 mpi4py = { version="*", channel="conda-forge" }
+pykerberos = { version="*", channel="conda-forge" }
 openmpi = { version="*", channel="conda-forge/label/mpi-external" }
 prometheus-cpp = {version="*", channel="conda-forge" }
 
 [tool.pixi.feature.psana2extmpi.pypi-dependencies]
-psana = { url = "https://files.pythonhosted.org/packages/20/a1/a1e6442a4febe8519d21cc561fcc383eb4b5633e38d7c50a47436467f606/psana-4.3.5-cp313-cp313-manylinux_2_28_x86_64.whl" }
+psana = "==4.3.5"
 
 [tool.ruff]
 exclude = [
